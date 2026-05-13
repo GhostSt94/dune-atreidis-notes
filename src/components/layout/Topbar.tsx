@@ -1,4 +1,4 @@
-import { ChevronRight, AlertTriangle, Bell, Save } from 'lucide-react';
+import { ChevronRight, AlertTriangle, Save } from 'lucide-react';
 import { useCurrentGame, useGameStore, useJournalStore } from '@/store';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -42,15 +42,6 @@ export const Topbar = () => {
             {liveAlerts.length > 1 ? 's' : ''}
           </Badge>
         )}
-        <button
-          className="relative text-atreides-silverMuted hover:text-atreides-gold transition-colors p-1.5"
-          aria-label="Notifications"
-        >
-          <Bell size={16} />
-          {liveAlerts.length > 0 && (
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-severity-danger animate-pulseGold" />
-          )}
-        </button>
         <Button size="sm" variant="gold" onClick={advancePhase}>
           Phase suivante
         </Button>

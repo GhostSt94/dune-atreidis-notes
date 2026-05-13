@@ -9,7 +9,6 @@ import {
   Eye,
   RotateCcw,
   X,
-  ShieldOff,
   Coins,
   RotateCw,
 } from 'lucide-react';
@@ -258,18 +257,40 @@ export const CardsPage = () => {
                   <span style={{ color: factionTextColor(id) }}>{meta.shortName}</span>
                 </span>
               }
-              subtitle={`${factionEntries.length} carte(s) · ${factionTraitors.length}/${MAX_TRAITORS_PER_FACTION} traître(s) · ${spice} épice`}
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
+              {/* Épice — ligne compacte */}
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="flex items-baseline gap-1.5">
+                  <Coins size={13} className="text-atreides-gold/80 self-center" />
+                  <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
+                    {spice}
+                  </span>
+                  <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
+                    épice
+                  </span>
+                </span>
+                <div className="flex items-center gap-0.5 font-mono">
+                  <SpiceBtn onClick={() => adjustSpice(-5)}>−5</SpiceBtn>
+                  <SpiceBtn onClick={() => adjustSpice(-1)}>−1</SpiceBtn>
+                  <SpiceBtn onClick={() => adjustSpice(1)}>+1</SpiceBtn>
+                  <SpiceBtn onClick={() => adjustSpice(5)} accent>+5</SpiceBtn>
+                  <button
+                    onClick={() => setSpice(meta.startingSpice)}
+                    title={`Reset à ${meta.startingSpice}`}
+                    className="ml-1 p-1 text-atreides-silverMuted hover:text-atreides-gold transition-colors"
+                  >
+                    <RotateCw size={11} />
+                  </button>
+                </div>
+              </div>
+
               {/* Cartes en main */}
-              <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted mb-2">
-                Cartes en main
-              </p>
-              {factionEntries.length === 0 ? (
-                <p className="text-xs text-atreides-silverMuted italic mb-2">
-                  Aucune carte tracée.
-                </p>
-              ) : (
+              <SectionHeader
+                label="Cartes"
+                count={`${factionEntries.length}`}
+              />
+              {factionEntries.length > 0 && (
                 <ul className="space-y-1.5 mb-2">
                   {factionEntries.map((e, idx) => (
                     <CardEntryRow
@@ -283,96 +304,20 @@ export const CardsPage = () => {
                   ))}
                 </ul>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                leftIcon={<Plus size={12} />}
+              <button
                 onClick={() => setAddTarget({ factionId: id })}
-                className="w-full border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-atreides-silverMuted hover:text-atreides-gold transition-colors font-display uppercase tracking-wider"
               >
-                Ajouter une carte
-              </Button>
+                <Plus size={12} /> Ajouter une carte
+              </button>
 
-              {/* Section Épice */}
-              <div className="mt-4 pt-3 border-t border-atreides-gold/10">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
-                    <Coins size={11} />
-                    Épice
-                  </p>
-                  <button
-                    onClick={() => setSpice(meta.startingSpice)}
-                    title={`Reset à ${meta.startingSpice} (valeur de départ)`}
-                    className="text-[10px] font-mono text-atreides-silverMuted hover:text-atreides-gold transition-colors flex items-center gap-1"
-                  >
-                    <RotateCw size={10} /> reset {meta.startingSpice}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 flex items-baseline gap-1.5">
-                    <span className="font-display text-3xl text-atreides-gold tabular-nums">
-                      {spice}
-                    </span>
-                    <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
-                      sp
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => adjustSpice(-5)}
-                      className="px-2 font-mono"
-                    >
-                      −5
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => adjustSpice(-1)}
-                      className="px-2 font-mono"
-                    >
-                      −1
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => adjustSpice(1)}
-                      className="px-2 font-mono"
-                    >
-                      +1
-                    </Button>
-                    <Button
-                      variant="gold"
-                      size="sm"
-                      onClick={() => adjustSpice(5)}
-                      className="px-2 font-mono"
-                    >
-                      +5
-                    </Button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Section Traîtres */}
-              <div className="mt-4 pt-3 border-t border-atreides-gold/10">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
-                    <ShieldOff size={11} />
-                    Traîtres ({factionTraitors.length}/{MAX_TRAITORS_PER_FACTION})
-                  </p>
-                  {id === 'harkonnen' && (
-                    <Badge tone="red">Tous actifs</Badge>
-                  )}
-                </div>
-
-                {factionTraitors.length === 0 ? (
-                  <p className="text-xs text-atreides-silverMuted italic mb-2">
-                    Aucun traître connu.
-                  </p>
-                ) : (
+              {/* Traîtres */}
+              <div className="mt-5">
+                <SectionHeader
+                  label="Traîtres"
+                  count={`${factionTraitors.length}/${MAX_TRAITORS_PER_FACTION}`}
+                />
+                {factionTraitors.length > 0 && (
                   <ul className="space-y-1 mb-2">
                     {factionTraitors.map((t) => (
                       <TraitorRow
@@ -386,17 +331,13 @@ export const CardsPage = () => {
                     ))}
                   </ul>
                 )}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  leftIcon={<Plus size={12} />}
+                <button
                   disabled={factionTraitors.length >= MAX_TRAITORS_PER_FACTION}
                   onClick={() => setAddingTraitorFor(id)}
-                  className="w-full border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-atreides-silverMuted hover:text-atreides-gold transition-colors font-display uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-atreides-silverMuted"
                 >
-                  Ajouter un traître
-                </Button>
+                  <Plus size={12} /> Ajouter un traître
+                </button>
               </div>
             </UICard>
           );
@@ -523,6 +464,37 @@ export const CardsPage = () => {
 // ──────────────────────────────────────────────────────────
 // Sub-components
 // ──────────────────────────────────────────────────────────
+
+const SpiceBtn = ({
+  children,
+  onClick,
+  accent = false,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  accent?: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      'px-1.5 py-0.5 rounded text-[11px] transition-colors min-w-[26px]',
+      accent
+        ? 'text-atreides-gold hover:bg-atreides-gold/15'
+        : 'text-atreides-silverMuted hover:text-atreides-silver hover:bg-atreides-navy/40',
+    )}
+  >
+    {children}
+  </button>
+);
+
+const SectionHeader = ({ label, count }: { label: string; count: string }) => (
+  <div className="flex items-baseline justify-between mb-2">
+    <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
+      {label}
+    </span>
+    <span className="text-[10px] font-mono text-atreides-gold/70">{count}</span>
+  </div>
+);
 
 interface CardEntryRowProps {
   entry: CardTrackerEntry;
