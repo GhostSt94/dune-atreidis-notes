@@ -10,11 +10,14 @@ import {
   RotateCcw,
   X,
   ShieldOff,
+  Coins,
+  RotateCw,
 } from 'lucide-react';
 import {
   useCardsStore,
   useCurrentGame,
   useTraitorsStore,
+  useFactionStore,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
 import { TREACHERY_CARDS, getCard } from '@/data/cards';
@@ -60,6 +63,8 @@ export const CardsPage = () => {
   const clearTraitorLeader = useTraitorsStore((s) => s.clearLeader);
   const toggleTraitorActive = useTraitorsStore((s) => s.toggleActive);
   const removeTraitorSlot = useTraitorsStore((s) => s.removeSlot);
+  const factionStateByGame = useFactionStore((s) => s.byGame);
+  const updateFaction = useFactionStore((s) => s.updateFaction);
 
   const [addTarget, setAddTarget] = useState<AddTarget | null>(null);
   const [revealEntry, setRevealEntry] = useState<CardTrackerEntry | null>(null);
@@ -230,6 +235,20 @@ export const CardsPage = () => {
           const meta = FACTIONS[id];
           const factionEntries = cardsByFaction.get(id) ?? [];
           const factionTraitors = traitorsByFaction.get(id) ?? [];
+          const factionState = factionStateByGame[game.id]?.[id];
+          const spice = factionState?.estimatedSpice ?? meta.startingSpice;
+
+          const adjustSpice = (delta: number) => {
+            updateFaction(game.id, id, {
+              estimatedSpice: Math.max(0, spice + delta),
+            });
+          };
+          const setSpice = (value: number) => {
+            updateFaction(game.id, id, {
+              estimatedSpice: Math.max(0, Number.isFinite(value) ? value : 0),
+            });
+          };
+
           return (
             <UICard
               key={id}
@@ -239,7 +258,7 @@ export const CardsPage = () => {
                   <span style={{ color: factionTextColor(id) }}>{meta.shortName}</span>
                 </span>
               }
-              subtitle={`${factionEntries.length} carte(s) · ${factionTraitors.length}/${MAX_TRAITORS_PER_FACTION} traître(s)`}
+              subtitle={`${factionEntries.length} carte(s) · ${factionTraitors.length}/${MAX_TRAITORS_PER_FACTION} traître(s) · ${spice} épice`}
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
               {/* Cartes en main */}
@@ -273,6 +292,69 @@ export const CardsPage = () => {
               >
                 Ajouter une carte
               </Button>
+
+              {/* Section Épice */}
+              <div className="mt-4 pt-3 border-t border-atreides-gold/10">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
+                    <Coins size={11} />
+                    Épice
+                  </p>
+                  <button
+                    onClick={() => setSpice(meta.startingSpice)}
+                    title={`Reset à ${meta.startingSpice} (valeur de départ)`}
+                    className="text-[10px] font-mono text-atreides-silverMuted hover:text-atreides-gold transition-colors flex items-center gap-1"
+                  >
+                    <RotateCw size={10} /> reset {meta.startingSpice}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-baseline gap-1.5">
+                    <span className="font-display text-3xl text-atreides-gold tabular-nums">
+                      {spice}
+                    </span>
+                    <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
+                      sp
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => adjustSpice(-5)}
+                      className="px-2 font-mono"
+                    >
+                      −5
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => adjustSpice(-1)}
+                      className="px-2 font-mono"
+                    >
+                      −1
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => adjustSpice(1)}
+                      className="px-2 font-mono"
+                    >
+                      +1
+                    </Button>
+                    <Button
+                      variant="gold"
+                      size="sm"
+                      onClick={() => adjustSpice(5)}
+                      className="px-2 font-mono"
+                    >
+                      +5
+                    </Button>
+                  </div>
+                </div>
+
+              </div>
 
               {/* Section Traîtres */}
               <div className="mt-4 pt-3 border-t border-atreides-gold/10">
