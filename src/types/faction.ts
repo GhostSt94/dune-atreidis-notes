@@ -31,7 +31,9 @@ export interface FactionState {
   id: FactionId;
   name: string;
   color: string;
-  estimatedTroops: number;
+  estimatedTroops: number; // total vivant (20 - mort) — utilisé par l'AI
+  troopsDead?: number; // troupes tombées (dans les tanks Tleilaxu)
+  troopsOnMap?: number; // troupes déployées sur le plateau
   estimatedSpice: number;
   zonesControlled?: number; // 0..4 — saisi à la main pendant la partie
   alliances: FactionId[];

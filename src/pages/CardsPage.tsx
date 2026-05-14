@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -12,6 +12,7 @@ import {
   Coins,
   RotateCw,
   Castle,
+  MapPin,
 } from 'lucide-react';
 import {
   useCardsStore,
@@ -51,6 +52,8 @@ const TYPE_TONE: Record<CardType, 'red' | 'blue' | 'gold' | 'neutral'> = {
 
 type AddTarget = { factionId: FactionId } | { eliminated: true };
 
+const TOTAL_TROOPS = 20;
+
 export const CardsPage = () => {
   const game = useCurrentGame();
   const entries = useCardsStore((s) => s.entries);
@@ -65,6 +68,8 @@ export const CardsPage = () => {
   const removeTraitorSlot = useTraitorsStore((s) => s.removeSlot);
   const factionStateByGame = useFactionStore((s) => s.byGame);
   const updateFaction = useFactionStore((s) => s.updateFaction);
+  const killLeader = useFactionStore((s) => s.killLeader);
+  const reviveLeader = useFactionStore((s) => s.reviveLeader);
 
   const [addTarget, setAddTarget] = useState<AddTarget | null>(null);
   const [revealEntry, setRevealEntry] = useState<CardTrackerEntry | null>(null);
@@ -238,6 +243,10 @@ export const CardsPage = () => {
           const factionState = factionStateByGame[game.id]?.[id];
           const spice = factionState?.estimatedSpice ?? meta.startingSpice;
           const zones = factionState?.zonesControlled ?? 0;
+          const dead = factionState?.troopsDead ?? 0;
+          const onMap = factionState?.troopsOnMap ?? 0;
+          const reserve = TOTAL_TROOPS - dead - onMap;
+          const reserveOverflow = reserve < 0;
 
           const adjustSpice = (delta: number) => {
             updateFaction(game.id, id, {
@@ -293,7 +302,7 @@ export const CardsPage = () => {
               </div>
 
               {/* Zones contrôlées — sélecteur 0..4 */}
-              <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="flex items-baseline gap-1.5">
                   <Castle size={13} className="text-atreides-gold/80 self-center" />
                   <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
@@ -320,6 +329,86 @@ export const CardsPage = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Troupes — section avec stepper inputs */}
+              <div className="mb-4 pt-1">
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
+                    Troupes
+                  </span>
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono',
+                      reserveOverflow ? 'text-severity-danger' : 'text-atreides-gold/70',
+                    )}
+                  >
+                    Réserve : {reserve} / {TOTAL_TROOPS}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <TroopStepper
+                    icon={<Skull size={12} />}
+                    label="Mort"
+                    value={dead}
+                    onChange={(n) => {
+                      const newDead = Math.max(0, n);
+                      updateFaction(game.id, id, {
+                        troopsDead: newDead,
+                        estimatedTroops: Math.max(0, TOTAL_TROOPS - newDead),
+                      });
+                    }}
+                  />
+                  <TroopStepper
+                    icon={<MapPin size={12} />}
+                    label="Sur carte"
+                    value={onMap}
+                    onChange={(n) =>
+                      updateFaction(game.id, id, {
+                        troopsOnMap: Math.max(0, n),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Leaders — vivants/tombés */}
+              {factionState && factionState.leaders.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
+                      Leaders
+                    </span>
+                    <span
+                      className={cn(
+                        'text-[10px] font-mono',
+                        factionState.leaders.filter((l) => l.alive).length <=
+                          factionState.leaders.length / 2
+                          ? 'text-severity-danger'
+                          : 'text-atreides-gold/70',
+                      )}
+                    >
+                      {factionState.leaders.filter((l) => l.alive).length}/
+                      {factionState.leaders.length}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {factionState.leaders.map((l) => (
+                      <LeaderAvatar
+                        key={l.id}
+                        name={l.name}
+                        value={l.value}
+                        portrait={l.portrait}
+                        alive={l.alive}
+                        onToggle={() =>
+                          l.alive
+                            ? killLeader(game.id, id, l.id)
+                            : reviveLeader(game.id, id, l.id)
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Cartes en main */}
               <SectionHeader
@@ -531,6 +620,118 @@ const SectionHeader = ({ label, count }: { label: string; count: string }) => (
     <span className="text-[10px] font-mono text-atreides-gold/70">{count}</span>
   </div>
 );
+
+interface LeaderAvatarProps {
+  name: string;
+  value: number;
+  portrait?: string;
+  alive: boolean;
+  onToggle: () => void;
+}
+
+const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarProps) => (
+  <button
+    onClick={onToggle}
+    title={`${name} · valeur ${value}${alive ? '' : ' · tombé'}`}
+    aria-label={`${name} (${alive ? 'vivant' : 'tombé'}) — cliquer pour basculer`}
+    className={cn(
+      'relative shrink-0 w-9 h-9 rounded-full overflow-hidden border-2 transition-all',
+      alive
+        ? 'border-atreides-gold/40 hover:border-atreides-gold/80 hover:scale-105'
+        : 'border-severity-danger/50 hover:border-severity-danger',
+    )}
+  >
+    {portrait ? (
+      <img
+        src={portrait}
+        alt={name}
+        className={cn(
+          'w-full h-full object-cover',
+          !alive && 'grayscale brightness-50',
+        )}
+        loading="lazy"
+        draggable={false}
+      />
+    ) : (
+      <div
+        className={cn(
+          'w-full h-full bg-atreides-night flex items-center justify-center text-[10px] font-mono text-atreides-silverMuted',
+          !alive && 'grayscale brightness-50',
+        )}
+      >
+        {name.slice(0, 2)}
+      </div>
+    )}
+    {!alive && (
+      <span className="absolute inset-0 flex items-center justify-center bg-atreides-deep/40">
+        <Skull size={14} className="text-severity-danger drop-shadow-[0_0_4px_rgba(127,29,29,0.8)]" />
+      </span>
+    )}
+  </button>
+);
+
+interface TroopStepperProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}
+
+const TroopStepper = ({ icon, label, value, onChange }: TroopStepperProps) => {
+  const [draft, setDraft] = useState(String(value));
+
+  // Synchronise le draft local quand la valeur source change (ex : ajustement externe)
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = () => {
+    const n = parseInt(draft, 10);
+    if (Number.isNaN(n)) {
+      setDraft(String(value));
+      return;
+    }
+    if (n !== value) onChange(Math.max(0, n));
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="flex items-center gap-1.5 text-xs text-atreides-silver">
+        <span className="text-atreides-gold/80">{icon}</span>
+        {label}
+      </span>
+      <div className="flex items-center">
+        <button
+          onClick={() => onChange(Math.max(0, value - 1))}
+          disabled={value <= 0}
+          aria-label="Diminuer"
+          className="w-7 h-7 rounded-l-md border border-r-0 border-atreides-gold/30 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-mono"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          }}
+          className="w-14 h-7 text-center font-mono text-sm bg-atreides-deep/60 border-y border-atreides-gold/30 text-atreides-silver focus:outline-none focus:border-atreides-gold/60 focus:bg-atreides-deep tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0"
+        />
+        <button
+          onClick={() => onChange(value + 1)}
+          aria-label="Augmenter"
+          className="w-7 h-7 rounded-r-md border border-l-0 border-atreides-gold/30 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/60 transition-colors font-mono"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface CardEntryRowProps {
   entry: CardTrackerEntry;

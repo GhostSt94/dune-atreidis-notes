@@ -32,7 +32,9 @@ const makeFactionState = (id: FactionId): FactionState => {
     id,
     name: meta.name,
     color: meta.color,
-    estimatedTroops: meta.startingTroops,
+    estimatedTroops: 20, // total vivant = 20 - mort
+    troopsDead: 0,
+    troopsOnMap: 0,
     estimatedSpice: meta.startingSpice,
     zonesControlled: 0,
     alliances: [],
