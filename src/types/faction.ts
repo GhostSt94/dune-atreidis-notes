@@ -33,6 +33,7 @@ export interface FactionState {
   color: string;
   estimatedTroops: number;
   estimatedSpice: number;
+  zonesControlled?: number; // 0..4 — saisi à la main pendant la partie
   alliances: FactionId[];
   threatLevel: 0 | 1 | 2 | 3 | 4;
   privateNotes: string;

@@ -11,6 +11,7 @@ import {
   X,
   Coins,
   RotateCw,
+  Castle,
 } from 'lucide-react';
 import {
   useCardsStore,
@@ -236,6 +237,7 @@ export const CardsPage = () => {
           const factionTraitors = traitorsByFaction.get(id) ?? [];
           const factionState = factionStateByGame[game.id]?.[id];
           const spice = factionState?.estimatedSpice ?? meta.startingSpice;
+          const zones = factionState?.zonesControlled ?? 0;
 
           const adjustSpice = (delta: number) => {
             updateFaction(game.id, id, {
@@ -245,6 +247,11 @@ export const CardsPage = () => {
           const setSpice = (value: number) => {
             updateFaction(game.id, id, {
               estimatedSpice: Math.max(0, Number.isFinite(value) ? value : 0),
+            });
+          };
+          const setZones = (value: number) => {
+            updateFaction(game.id, id, {
+              zonesControlled: Math.max(0, Math.min(4, value)),
             });
           };
 
@@ -260,7 +267,7 @@ export const CardsPage = () => {
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
               {/* Épice — ligne compacte */}
-              <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="flex items-baseline gap-1.5">
                   <Coins size={13} className="text-atreides-gold/80 self-center" />
                   <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
@@ -282,6 +289,35 @@ export const CardsPage = () => {
                   >
                     <RotateCw size={11} />
                   </button>
+                </div>
+              </div>
+
+              {/* Zones contrôlées — sélecteur 0..4 */}
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="flex items-baseline gap-1.5">
+                  <Castle size={13} className="text-atreides-gold/80 self-center" />
+                  <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
+                    {zones}
+                  </span>
+                  <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
+                    zones
+                  </span>
+                </span>
+                <div className="flex items-center gap-0.5 font-mono">
+                  {[0, 1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setZones(n)}
+                      className={cn(
+                        'w-7 h-7 rounded text-[11px] transition-colors border',
+                        zones === n
+                          ? 'bg-atreides-gold/20 border-atreides-gold text-atreides-gold'
+                          : 'bg-transparent border-atreides-gold/15 text-atreides-silverMuted hover:border-atreides-gold/40 hover:text-atreides-silver',
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
                 </div>
               </div>
 

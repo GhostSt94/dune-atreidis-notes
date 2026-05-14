@@ -34,6 +34,7 @@ const makeFactionState = (id: FactionId): FactionState => {
     color: meta.color,
     estimatedTroops: meta.startingTroops,
     estimatedSpice: meta.startingSpice,
+    zonesControlled: 0,
     alliances: [],
     threatLevel: 1,
     privateNotes: '',
@@ -84,18 +85,49 @@ export const useFactionStore = create<FactionStore>()(
         const fa = game[a];
         const fb = game[b];
         if (!fa || !fb) return;
-        const updateList = (current: FactionId[], target: FactionId): FactionId[] =>
-          allied
-            ? Array.from(new Set([...current, target]))
-            : current.filter((x) => x !== target);
+
+        if (!allied) {
+          // Briser l'alliance entre a et b : retirer mutuellement
+          set({
+            byGame: {
+              ...byGame,
+              [gameId]: {
+                ...game,
+                [a]: { ...fa, alliances: fa.alliances.filter((x) => x !== b) },
+                [b]: { ...fb, alliances: fb.alliances.filter((x) => x !== a) },
+              },
+            },
+          });
+          return;
+        }
+
+        // Forger l'alliance a↔b : règles Dune — chaque faction ne peut avoir
+        // qu'UNE alliance à la fois. Casser toute alliance précédente de a et b
+        // (et nettoyer côté ex-partenaires) avant d'établir la nouvelle.
+        const nextGame = { ...game } as typeof game;
+        const factionsToClean = new Set<FactionId>([a, b]);
+        // Repérer les ex-partenaires (factions qui avaient a ou b dans leurs alliances)
+        fa.alliances.forEach((p) => factionsToClean.add(p));
+        fb.alliances.forEach((p) => factionsToClean.add(p));
+
+        // Retirer toute trace de a et b dans la liste d'alliances de chaque faction concernée
+        factionsToClean.forEach((id) => {
+          const f = nextGame[id];
+          if (!f) return;
+          nextGame[id] = {
+            ...f,
+            alliances: f.alliances.filter((x) => x !== a && x !== b),
+          };
+        });
+
+        // Établir la nouvelle alliance bidirectionnelle
+        nextGame[a] = { ...nextGame[a]!, alliances: [b] };
+        nextGame[b] = { ...nextGame[b]!, alliances: [a] };
+
         set({
           byGame: {
             ...byGame,
-            [gameId]: {
-              ...game,
-              [a]: { ...fa, alliances: updateList(fa.alliances, b) },
-              [b]: { ...fb, alliances: updateList(fb.alliances, a) },
-            },
+            [gameId]: nextGame,
           },
         });
       },

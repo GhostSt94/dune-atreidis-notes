@@ -6,6 +6,12 @@ import { computeThreatScore, type ThreatBreakdown } from './threatScoring';
 import { estimateHand, type HandEstimate } from './handEstimation';
 import { detectDangerousAlliances, type AllianceRisk } from './allianceRisk';
 import { computeWinProbabilities, type WinProbability } from './winProbability';
+import {
+  computeAllianceOpportunities,
+  computePotentialDangers,
+  type AllianceOpportunity,
+  type AllianceDanger,
+} from './allianceSuggestions';
 import { FACTIONS } from '@/data/factions';
 
 export interface Suggestion {
@@ -19,6 +25,8 @@ export interface AnalysisReport {
   threats: Record<FactionId, ThreatBreakdown>;
   hands: Record<FactionId, HandEstimate>;
   allianceRisks: AllianceRisk[];
+  allianceOpportunities: AllianceOpportunity[];
+  potentialAllianceDangers: AllianceDanger[];
   winProbs: WinProbability[];
   suggestions: Suggestion[];
 }
@@ -38,6 +46,18 @@ export const analyze = (
   });
 
   const allianceRisks = detectDangerousAlliances(factions, threats, game.playerFaction);
+  const allianceOpportunities = computeAllianceOpportunities(
+    game,
+    factions,
+    controls,
+    threats,
+  );
+  const potentialAllianceDangers = computePotentialDangers(
+    game,
+    factions,
+    controls,
+    threats,
+  );
   const winProbs = computeWinProbabilities(factions, controls, game.currentTurn);
 
   const suggestions: Suggestion[] = [];
@@ -99,5 +119,13 @@ export const analyze = (
     });
   }
 
-  return { threats, hands, allianceRisks, winProbs, suggestions };
+  return {
+    threats,
+    hands,
+    allianceRisks,
+    allianceOpportunities,
+    potentialAllianceDangers,
+    winProbs,
+    suggestions,
+  };
 };

@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, StickyNote, Layers, Swords, Brain } from 'lucide-react';
+import { StickyNote, Layers, Swords, Brain, Handshake } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const items = [
-  { to: '/game', label: 'Board', icon: LayoutDashboard, end: true },
+  { to: '/game', label: 'Cartes', icon: Layers, end: true },
   { to: '/game/notes', label: 'Notes', icon: StickyNote },
-  { to: '/game/cards', label: 'Cartes', icon: Layers },
   { to: '/game/battles', label: 'Batailles', icon: Swords },
-  { to: '/game/analysis', label: 'IA', icon: Brain },
+  { to: '/game/alliances', label: 'Alliances', icon: Handshake },
+  { to: '/game/analysis', label: 'Stratégie', icon: Brain },
 ];
 
 export const MobileNav = () => (

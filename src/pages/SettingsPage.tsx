@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { Download, Upload, RotateCcw, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, Upload, RotateCcw, User, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
@@ -103,9 +104,17 @@ export const SettingsPage = () => {
 
   return (
     <div className="px-4 lg:px-6 py-6 max-w-3xl mx-auto space-y-4">
-      <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-        Paramètres
-      </h1>
+      <div>
+        <Link
+          to="/games"
+          className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
+        >
+          <ArrowLeft size={14} /> Retour aux parties
+        </Link>
+        <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
+          Paramètres
+        </h1>
+      </div>
 
       <Card title="Profil">
         <div className="flex items-center gap-3">

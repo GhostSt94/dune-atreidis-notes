@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useGameStore } from '@/store';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -14,6 +16,12 @@ export const HistoryPage = () => {
 
   return (
     <div className="px-4 lg:px-6 py-6 max-w-4xl mx-auto">
+      <Link
+        to="/games"
+        className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
+      >
+        <ArrowLeft size={14} /> Retour aux parties
+      </Link>
       <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold mb-4">
         Historique
       </h1>

@@ -1,13 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
   Users,
   StickyNote,
   Layers,
   Swords,
   Map,
-  BookOpen,
   Brain,
+  Handshake,
   History,
   Settings,
   LogOut,
@@ -18,14 +17,13 @@ import { FACTIONS } from '@/data/factions';
 import { AtreidesIcon } from '@/components/icons/FactionIcon';
 
 const navItems = [
-  { to: '/game', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
+  { to: '/game', label: 'Cartes', icon: Layers, end: true },
   { to: '/game/factions', label: 'Factions', icon: Users },
   { to: '/game/notes', label: 'Notes', icon: StickyNote },
-  { to: '/game/cards', label: 'Cartes', icon: Layers },
   { to: '/game/battles', label: 'Batailles', icon: Swords },
   { to: '/game/map', label: 'Carte Dune', icon: Map },
-  { to: '/game/journal', label: 'Journal', icon: BookOpen },
-  { to: '/game/analysis', label: 'Analyse IA', icon: Brain },
+  { to: '/game/alliances', label: 'Alliances', icon: Handshake },
+  { to: '/game/analysis', label: 'Stratégie', icon: Brain },
 ];
 
 const secondary = [

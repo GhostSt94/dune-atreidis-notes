@@ -22,6 +22,8 @@ interface GameStoreActions {
   loadGame: (id: string) => void;
   closeGame: () => void;
   advancePhase: () => void;
+  nextTurn: () => void;
+  previousTurn: () => void;
   setPhase: (phase: GamePhase) => void;
   setStormSector: (sector: number) => void;
   finishGame: (winner: FactionId) => void;
@@ -93,6 +95,51 @@ export const useGameStore = create<GameStore>()(
           phase: updated.currentPhase,
           type: turnIncrement ? 'turn_start' : 'phase_change',
           title: turnIncrement ? `Tour ${updated.currentTurn} commence` : `Phase : ${phase}`,
+          factionsInvolved: [],
+        });
+      },
+
+      nextTurn: () => {
+        const { currentGameId, games } = get();
+        if (!currentGameId) return;
+        const game = games[currentGameId];
+        if (!game) return;
+        const updated: Game = {
+          ...game,
+          currentPhase: 'storm',
+          currentTurn: game.currentTurn + 1,
+          updatedAt: now(),
+        };
+        set({ games: { ...games, [currentGameId]: updated } });
+        useJournalStore.getState().log({
+          gameId: currentGameId,
+          turn: updated.currentTurn,
+          phase: 'storm',
+          type: 'turn_start',
+          title: `Tour ${updated.currentTurn} commence`,
+          factionsInvolved: [],
+        });
+      },
+
+      previousTurn: () => {
+        const { currentGameId, games } = get();
+        if (!currentGameId) return;
+        const game = games[currentGameId];
+        if (!game) return;
+        if (game.currentTurn <= 1) return; // garde-fou : pas de tour < 1
+        const updated: Game = {
+          ...game,
+          currentPhase: 'storm',
+          currentTurn: game.currentTurn - 1,
+          updatedAt: now(),
+        };
+        set({ games: { ...games, [currentGameId]: updated } });
+        useJournalStore.getState().log({
+          gameId: currentGameId,
+          turn: updated.currentTurn,
+          phase: 'storm',
+          type: 'turn_start',
+          title: `Retour au tour ${updated.currentTurn}`,
           factionsInvolved: [],
         });
       },

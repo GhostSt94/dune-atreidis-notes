@@ -7,6 +7,11 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ThreatMeter } from '@/components/ui/ThreatMeter';
 import { FactionPill } from '@/components/ui/FactionPill';
+import { PhaseTracker } from '@/components/widgets/PhaseTracker';
+import { FactionsOverview } from '@/components/widgets/FactionsOverview';
+import { AlertsPanel } from '@/components/widgets/AlertsPanel';
+import { QuickNote } from '@/components/widgets/QuickNote';
+import { AlliancesPanel } from '@/components/widgets/AlliancesPanel';
 
 export const AnalysisPage = () => {
   const game = useCurrentGame();
@@ -20,12 +25,35 @@ export const AnalysisPage = () => {
         <Brain className="text-atreides-gold" size={22} />
         <div>
           <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-            Analyse Mentat
+            Stratégie
           </h1>
           <p className="text-xs text-atreides-silverMuted">
-            Calculs heuristiques basés sur l&apos;état actuel de la partie.
+            État de la partie et analyse heuristique Mentat.
           </p>
         </div>
+      </div>
+
+      {/* ─── Vue d'ensemble : phase + widgets ─── */}
+      <PhaseTracker />
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <FactionsOverview />
+          <AlliancesPanel />
+        </div>
+        <div className="space-y-4">
+          <AlertsPanel />
+          <QuickNote />
+        </div>
+      </div>
+
+      {/* ─── Séparateur Mentat ─── */}
+      <div className="flex items-center gap-3 pt-4 mt-2 border-t border-atreides-gold/15">
+        <Brain size={16} className="text-atreides-gold" />
+        <h2 className="font-display text-sm uppercase tracking-widest text-atreides-gold">
+          Analyse Mentat
+        </h2>
+        <span className="flex-1 h-px bg-atreides-gold/15" />
       </div>
 
       <Card
