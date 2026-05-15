@@ -4,6 +4,7 @@ import {
   useCurrentGame,
   useFactionStore,
   useMapStore,
+  useTraitorsStore,
 } from '@/store';
 import { analyze, type AnalysisReport } from '@/ai/engine';
 
@@ -12,6 +13,7 @@ export const useAnalysis = (): AnalysisReport | null => {
   const byGame = useFactionStore((s) => s.byGame);
   const mapByGame = useMapStore((s) => s.byGame);
   const entries = useCardsStore((s) => s.entries);
+  const traitors = useTraitorsStore((s) => s.traitors);
 
   return useMemo(() => {
     if (!game) return null;
@@ -19,6 +21,7 @@ export const useAnalysis = (): AnalysisReport | null => {
     if (!factions) return null;
     const controls = mapByGame[game.id] ?? {};
     const cards = entries.filter((e) => e.gameId === game.id);
-    return analyze(game, factions, controls, cards);
-  }, [game, byGame, mapByGame, entries]);
+    const gameTraitors = traitors.filter((t) => t.gameId === game.id);
+    return analyze(game, factions, controls, cards, gameTraitors);
+  }, [game, byGame, mapByGame, entries, traitors]);
 };

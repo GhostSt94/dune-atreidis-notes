@@ -1,12 +1,16 @@
-import { ChevronRight, Undo2 } from 'lucide-react';
+import { ChevronRight, Undo2, Settings } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCurrentGame, useGameStore } from '@/store';
 import { Button } from '@/components/ui/Button';
 import { getPhaseMeta } from '@/data/phases';
+import { cn } from '@/lib/cn';
 
 export const Topbar = () => {
   const game = useCurrentGame();
   const nextTurn = useGameStore((s) => s.nextTurn);
   const previousTurn = useGameStore((s) => s.previousTurn);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (!game) return null;
   const phase = getPhaseMeta(game.currentPhase);
@@ -14,11 +18,19 @@ export const Topbar = () => {
 
   return (
     <header className="sticky top-0 z-20 h-14 bg-atreides-deep/90 backdrop-blur-md border-b border-atreides-gold/15 flex items-center px-4 lg:px-6 gap-4">
+      <div className="flex items-center gap-1 lg:hidden">
+        <TopbarIconBtn
+          icon={<Settings size={14} />}
+          title="Paramètres"
+          active={location.pathname === '/settings'}
+          onClick={() => navigate('/settings')}
+        />
+      </div>
       <div className="flex items-center gap-2 text-xs text-atreides-silverMuted font-mono">
-        <span className="text-atreides-silver">Tour</span>
-        <span className="text-atreides-gold text-sm font-display">{game.currentTurn}</span>
-        <ChevronRight size={14} className="text-atreides-silverMuted" />
-        <span className="text-atreides-silver uppercase font-display tracking-wider">
+        <span className="text-atreides-silver text-[11px]">Tour</span>
+        <span className="text-atreides-gold text-xs font-display">{game.currentTurn}</span>
+        <ChevronRight size={12} className="text-atreides-silverMuted" />
+        <span className="text-atreides-silver uppercase font-display tracking-wider text-[10px]">
           {phase.label}
         </span>
       </div>
@@ -39,10 +51,36 @@ export const Topbar = () => {
         >
           <Undo2 size={14} />
         </button>
-        <Button size="sm" variant="gold" onClick={nextTurn}>
+        <Button size="sm" variant="gold" onClick={nextTurn} className="whitespace-nowrap">
           Tour suivant
         </Button>
       </div>
     </header>
   );
 };
+
+const TopbarIconBtn = ({
+  icon,
+  title,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  active: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    title={title}
+    aria-label={title}
+    className={cn(
+      'p-1.5 rounded-md border transition-colors',
+      active
+        ? 'border-atreides-gold/60 text-atreides-gold bg-atreides-gold/10'
+        : 'border-atreides-gold/30 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/60',
+    )}
+  >
+    {icon}
+  </button>
+);

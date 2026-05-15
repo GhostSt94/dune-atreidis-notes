@@ -19,6 +19,7 @@ import { usePredictionsStore } from './predictionsStore';
 import { useMapStore } from './mapStore';
 import { useJournalStore } from './journalStore';
 import { useTraitorsStore } from './traitorsStore';
+import { useSettingsStore } from './settingsStore';
 import type { FactionId } from '@/types/faction';
 
 export const cascadeDeleteGame = (gameId: string): void => {
@@ -34,6 +35,7 @@ export const cascadeDeleteGame = (gameId: string): void => {
 };
 
 export const bootstrapGame = (gameId: string, factions: FactionId[]): void => {
-  useFactionStore.getState().initForGame(gameId, factions);
+  const includeValue10 = useSettingsStore.getState().useValue10Leaders;
+  useFactionStore.getState().initForGame(gameId, factions, includeValue10);
   useMapStore.getState().initForGame(gameId);
 };

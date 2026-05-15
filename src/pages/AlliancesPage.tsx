@@ -13,7 +13,13 @@ import {
   Users as UsersIcon,
   Castle,
 } from 'lucide-react';
-import { useCurrentGame, useFactionStore, useMapStore } from '@/store';
+import {
+  useCardsStore,
+  useCurrentGame,
+  useFactionStore,
+  useMapStore,
+  useTraitorsStore,
+} from '@/store';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { computePairBenefit } from '@/ai/allianceSuggestions';
 import type { ThreatBreakdown } from '@/ai/threatScoring';
@@ -21,6 +27,8 @@ import { FACTIONS, factionTextColor } from '@/data/factions';
 import type { FactionId, FactionState } from '@/types/faction';
 import type { Game } from '@/types/game';
 import type { TerritoryControl } from '@/types/territory';
+import type { CardTrackerEntry } from '@/types/card';
+import type { Traitor } from '@/types/traitor';
 import { Card as UICard } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -35,6 +43,8 @@ export const AlliancesPage = () => {
   const byGame = useFactionStore((s) => s.byGame);
   const setAlliance = useFactionStore((s) => s.setAlliance);
   const mapByGame = useMapStore((s) => s.byGame);
+  const allCards = useCardsStore((s) => s.entries);
+  const allTraitors = useTraitorsStore((s) => s.traitors);
   const analysis = useAnalysis();
   const [selectedPair, setSelectedPair] = useState<[FactionId, FactionId] | null>(null);
 
@@ -42,6 +52,8 @@ export const AlliancesPage = () => {
   const factions = byGame[game.id];
   if (!factions || !analysis) return null;
   const controls = mapByGame[game.id] ?? {};
+  const cards = allCards.filter((c) => c.gameId === game.id);
+  const traitors = allTraitors.filter((t) => t.gameId === game.id);
 
   const player = game.playerFaction;
   const factionList = game.factionsInPlay;
@@ -186,6 +198,24 @@ export const AlliancesPage = () => {
                           </li>
                         ))}
                       </ul>
+                    )}
+                    {opp.historicalWinRate !== undefined && (
+                      <div className="mt-2 pt-2 border-t border-atreides-gold/10 flex items-center gap-2">
+                        <Badge
+                          tone={
+                            opp.historicalWinRate >= 0.6
+                              ? 'gold'
+                              : opp.historicalWinRate <= 0.4
+                                ? 'red'
+                                : 'neutral'
+                          }
+                        >
+                          Hist. {Math.round(opp.historicalWinRate * 100)}%
+                        </Badge>
+                        <span className="text-[10px] text-atreides-silverMuted font-mono">
+                          {opp.historicalSampleSize} précédent(s) similaire(s)
+                        </span>
+                      </div>
                     )}
                     {(willBreakPlayerAlliance || willBreakTargetAlliance) && (
                       <p className="mt-2 pt-2 border-t border-severity-warning/20 text-[10px] text-severity-warning font-mono flex items-start gap-1">
@@ -355,6 +385,8 @@ export const AlliancesPage = () => {
             factions={factions}
             controls={controls}
             threats={analysis.threats}
+            cards={cards}
+            traitors={traitors}
             onClose={() => setSelectedPair(null)}
             onForge={() => {
               setAlliance(game.id, selectedPair[0], selectedPair[1], true);
@@ -379,6 +411,8 @@ interface PairBenefitPanelProps {
   factions: Record<FactionId, FactionState>;
   controls: Record<string, TerritoryControl>;
   threats: Record<FactionId, ThreatBreakdown>;
+  cards: CardTrackerEntry[];
+  traitors: Traitor[];
   onClose: () => void;
   onForge: () => void;
   onBreak: () => void;
@@ -390,11 +424,22 @@ const PairBenefitPanel = ({
   factions,
   controls,
   threats,
+  cards,
+  traitors,
   onClose,
   onForge,
   onBreak,
 }: PairBenefitPanelProps) => {
-  const benefit = computePairBenefit(pair[0], pair[1], game, factions, controls, threats);
+  const benefit = computePairBenefit(
+    pair[0],
+    pair[1],
+    game,
+    factions,
+    controls,
+    threats,
+    cards,
+    traitors,
+  );
   if (!benefit) return null;
 
   const [a, b] = benefit.factions;
@@ -517,6 +562,60 @@ const PairBenefitPanel = ({
               >
                 <span className="text-severity-warning shrink-0">!</span>
                 {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Précédents Atreides (kNN) */}
+      {benefit.historicalContext && (
+        <div className="mb-3 p-2.5 rounded border border-atreides-gold/20 bg-atreides-deep/40">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase font-display tracking-wider text-atreides-gold flex items-center gap-1">
+              <Sparkles size={11} /> Précédents Atreides
+            </p>
+            <span className="text-[10px] font-mono text-atreides-silverMuted">
+              Win rate {Math.round(benefit.historicalContext.prediction.winRate * 100)}% ·
+              confiance {Math.round(benefit.historicalContext.prediction.confidence * 100)}%
+            </span>
+          </div>
+          <ul className="space-y-1">
+            {benefit.historicalContext.neighbors.map(({ battle, similarity, atreidesWon }) => (
+              <li
+                key={battle.gameId}
+                className="flex items-center gap-2 p-1.5 rounded bg-atreides-deep/60 border border-atreides-gold/10 text-[11px]"
+              >
+                <span className="font-mono text-[10px] text-atreides-silverMuted shrink-0 w-12">
+                  {battle.gameId.replace('ALLIANCE_', '#')}
+                </span>
+                <span className="text-[10px] text-atreides-silverMuted shrink-0 w-12 capitalize">
+                  {battle.gamePhase}
+                </span>
+                <span className="flex items-center gap-1 shrink-0">
+                  <FactionIcon faction="atreides" size={14} />
+                  <span className="text-atreides-silverMuted">+</span>
+                  <FactionIcon faction={battle.atreidesAlliance} size={14} />
+                </span>
+                <span className="text-atreides-silverMuted text-[10px]">vs</span>
+                <span className="flex items-center gap-0.5 shrink-0">
+                  {battle.enemyAlliance.map((f) => (
+                    <FactionIcon key={f} faction={f} size={14} />
+                  ))}
+                </span>
+                <span className="flex-1 text-[10px] text-atreides-silverMuted truncate">
+                  T{battle.round} · {battle.atreidesStrongholds + battle.alliedStrongholds}/
+                  {battle.enemyStrongholds} SH
+                </span>
+                <Badge tone={atreidesWon ? 'gold' : 'red'}>
+                  {atreidesWon ? 'Victoire' : 'Défaite'}
+                </Badge>
+                <span
+                  className="font-mono text-[10px] text-atreides-gold/70 shrink-0 w-10 text-right"
+                  title="Similarité"
+                >
+                  {Math.round(similarity * 100)}%
+                </span>
               </li>
             ))}
           </ul>

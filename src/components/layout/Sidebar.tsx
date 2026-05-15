@@ -17,7 +17,7 @@ import { FACTIONS } from '@/data/factions';
 import { AtreidesIcon } from '@/components/icons/FactionIcon';
 
 const navItems = [
-  { to: '/game', label: 'Cartes', icon: Layers, end: true },
+  { to: '/game', label: 'Tracker', icon: Layers, end: true },
   { to: '/game/factions', label: 'Factions', icon: Users },
   { to: '/game/notes', label: 'Notes', icon: StickyNote },
   { to: '/game/battles', label: 'Batailles', icon: Swords },

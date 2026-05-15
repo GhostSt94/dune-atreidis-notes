@@ -11,7 +11,7 @@ type FactionsByGame = Record<string, Record<FactionId, FactionState>>;
 
 interface FactionStore {
   byGame: FactionsByGame;
-  initForGame: (gameId: string, factions: FactionId[]) => void;
+  initForGame: (gameId: string, factions: FactionId[], includeValue10?: boolean) => void;
   removeGame: (gameId: string) => void;
   updateFaction: (gameId: string, id: FactionId, patch: Partial<FactionState>) => void;
   setAlliance: (gameId: string, a: FactionId, b: FactionId, allied: boolean) => void;
@@ -26,7 +26,7 @@ interface FactionStore {
   ) => void;
 }
 
-const makeFactionState = (id: FactionId): FactionState => {
+const makeFactionState = (id: FactionId, includeValue10 = false): FactionState => {
   const meta = FACTIONS[id];
   return {
     id,
@@ -40,7 +40,7 @@ const makeFactionState = (id: FactionId): FactionState => {
     alliances: [],
     threatLevel: 1,
     privateNotes: '',
-    leaders: buildLeadersFor(id, newId),
+    leaders: buildLeadersFor(id, newId, includeValue10),
     actionsHistory: [],
   };
 };
@@ -50,10 +50,10 @@ export const useFactionStore = create<FactionStore>()(
     (set, get) => ({
       byGame: {},
 
-      initForGame: (gameId, factions) => {
+      initForGame: (gameId, factions, includeValue10 = false) => {
         const map = {} as Record<FactionId, FactionState>;
         factions.forEach((id) => {
-          map[id] = makeFactionState(id);
+          map[id] = makeFactionState(id, includeValue10);
         });
         set((s) => ({ byGame: { ...s.byGame, [gameId]: map } }));
       },

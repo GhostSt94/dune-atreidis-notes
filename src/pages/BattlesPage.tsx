@@ -1,226 +1,511 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Plus, Trash2, Swords } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useBattlesStore, useCurrentGame } from '@/store';
-import { FACTIONS } from '@/data/factions';
+import {
+  Swords,
+  Brain,
+  Target,
+  ShieldAlert,
+  AlertTriangle,
+  Coins,
+  Castle,
+  Crown,
+  TrendingUp,
+} from 'lucide-react';
+import {
+  useCardsStore,
+  useCurrentGame,
+  useFactionStore,
+  useMapStore,
+  useTraitorsStore,
+} from '@/store';
+import {
+  computeBattleAnalysis,
+  type BattleAnalysis,
+  type Metric,
+} from '@/ai/battleAnalysis';
+import { FACTIONS, factionTextColor } from '@/data/factions';
 import { TERRITORIES } from '@/data/territories';
 import type { FactionId } from '@/types/faction';
-import type { BattleOutcome } from '@/types/battle';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input, Textarea } from '@/components/ui/Input';
+import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { FactionPill } from '@/components/ui/FactionPill';
-
-const schema = z.object({
-  territory: z.string().min(1),
-  attacker: z.string(),
-  defender: z.string(),
-  attackerTroops: z.coerce.number().int().min(0),
-  defenderTroops: z.coerce.number().int().min(0),
-  outcome: z.enum(['attacker_win', 'defender_win', 'pending']),
-  attackerLosses: z.coerce.number().int().min(0),
-  defenderLosses: z.coerce.number().int().min(0),
-  notes: z.string().optional(),
-});
-
-type FormData = z.infer<typeof schema>;
+import { FactionIcon } from '@/components/icons/FactionIcon';
+import { cn } from '@/lib/cn';
 
 export const BattlesPage = () => {
   const game = useCurrentGame();
-  const battles = useBattlesStore((s) => s.battles);
-  const addBattle = useBattlesStore((s) => s.addBattle);
-  const deleteBattle = useBattlesStore((s) => s.deleteBattle);
-  const [open, setOpen] = useState(false);
+  const factionsByGame = useFactionStore((s) => s.byGame);
+  const mapByGame = useMapStore((s) => s.byGame);
+  const cards = useCardsStore((s) => s.entries);
+  const traitors = useTraitorsStore((s) => s.traitors);
 
-  const { register, handleSubmit, reset, formState } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      territory: 'arrakeen',
-      attacker: 'atreides',
-      defender: 'harkonnen',
-      attackerTroops: 1,
-      defenderTroops: 1,
-      attackerLosses: 0,
-      defenderLosses: 0,
-      outcome: 'pending',
-      notes: '',
-    },
-  });
+  // ─── État du simulateur ───
+  const [simAttacker, setSimAttacker] = useState<FactionId>('atreides');
+  const [simDefender, setSimDefender] = useState<FactionId>('harkonnen');
+  const [simTerritory, setSimTerritory] = useState<string>('arrakeen');
+  const [simTroops, setSimTroops] = useState<number>(5);
+  const [simDial, setSimDial] = useState<number>(10);
+
+  // ─── Calcul d'analyse en live ───
+  const analysis: BattleAnalysis | null = useMemo(() => {
+    if (!game) return null;
+    const factions = factionsByGame[game.id];
+    if (!factions) return null;
+    return computeBattleAnalysis(
+      {
+        attackerId: simAttacker,
+        defenderId: simDefender,
+        territoryId: simTerritory,
+        troopsEngaged: simTroops,
+        maxDial: simDial,
+      },
+      game,
+      factions,
+      mapByGame[game.id] ?? {},
+      cards,
+      traitors,
+    );
+  }, [
+    factionsByGame,
+    mapByGame,
+    cards,
+    traitors,
+    game,
+    simAttacker,
+    simDefender,
+    simTerritory,
+    simTroops,
+    simDial,
+  ]);
 
   if (!game) return <Navigate to="/games" replace />;
 
-  const list = battles.filter((b) => b.gameId === game.id).sort((a, b) => b.createdAt - a.createdAt);
-
-  const onSubmit = (d: FormData) => {
-    addBattle(
-      {
-        gameId: game.id,
-        turn: game.currentTurn,
-        territory: d.territory,
-        attacker: d.attacker as FactionId,
-        defender: d.defender as FactionId,
-        attackerTroops: d.attackerTroops,
-        defenderTroops: d.defenderTroops,
-        attackerCardsPlayed: [],
-        defenderCardsPlayed: [],
-        outcome: d.outcome as BattleOutcome,
-        attackerLosses: d.attackerLosses,
-        defenderLosses: d.defenderLosses,
-        notes: d.notes ?? '',
-      },
-      game.currentPhase,
-    );
-    reset();
-    setOpen(false);
-  };
-
   return (
-    <div className="px-4 lg:px-6 py-6">
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-        <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-          Batailles
-        </h1>
-        <Button variant="gold" leftIcon={<Plus size={14} />} onClick={() => setOpen(true)}>
-          Consigner un combat
-        </Button>
-      </div>
+    <div className="px-4 lg:px-6 py-6 space-y-4">
+      <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold mb-2">
+        Batailles
+      </h1>
 
-      {list.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<Swords size={28} />}
-            title="Aucun combat enregistré"
-            description="Consignez chaque bataille pour analyser les tendances de force."
-          />
-        </Card>
-      ) : (
-        <div className="grid lg:grid-cols-2 gap-3">
-          {list.map((b) => {
-            const terr = TERRITORIES.find((t) => t.id === b.territory)?.name ?? b.territory;
-            return (
-              <Card key={b.id}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-display uppercase tracking-wider text-sm text-atreides-gold">
-                    {terr}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Badge tone="neutral">Tour {b.turn}</Badge>
-                    <Badge
-                      tone={
-                        b.outcome === 'attacker_win'
-                          ? 'gold'
-                          : b.outcome === 'defender_win'
-                            ? 'blue'
-                            : 'neutral'
-                      }
-                    >
-                      {b.outcome === 'attacker_win'
-                        ? 'Attaquant victorieux'
-                        : b.outcome === 'defender_win'
-                          ? 'Défenseur tient'
-                          : 'En cours'}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-[10px] uppercase font-mono text-atreides-silverMuted">
-                      Attaquant
-                    </p>
-                    <FactionPill id={b.attacker} />
-                    <p className="text-atreides-silver mt-1 font-mono text-xs">
-                      {b.attackerTroops} troupes · {b.attackerLosses} pertes
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-mono text-atreides-silverMuted">
-                      Défenseur
-                    </p>
-                    <FactionPill id={b.defender} />
-                    <p className="text-atreides-silver mt-1 font-mono text-xs">
-                      {b.defenderTroops} troupes · {b.defenderLosses} pertes
-                    </p>
-                  </div>
-                </div>
-                {b.notes && (
-                  <p className="text-xs text-atreides-silver/80 mt-3 italic border-t border-atreides-gold/10 pt-2">
-                    {b.notes}
-                  </p>
-                )}
-                <div className="flex justify-end mt-2">
-                  <button
-                    onClick={() => deleteBattle(b.id)}
-                    className="text-atreides-silverMuted hover:text-severity-danger"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      {/* ─── Simulateur de bataille ─── */}
+      <BattleSimulator
+        attacker={simAttacker}
+        defender={simDefender}
+        territory={simTerritory}
+        troops={simTroops}
+        dial={simDial}
+        factionsInPlay={game.factionsInPlay}
+        analysis={analysis}
+        onAttackerChange={setSimAttacker}
+        onDefenderChange={setSimDefender}
+        onTerritoryChange={setSimTerritory}
+        onTroopsChange={setSimTroops}
+        onDialChange={setSimDial}
+      />
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Nouvelle bataille" size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-3">
-          <Select label="Territoire" {...register('territory')} className="col-span-2">
-            {TERRITORIES.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </Select>
-          <Select label="Attaquant" {...register('attacker')}>
-            {game.factionsInPlay.map((id) => (
-              <option key={id} value={id}>
-                {FACTIONS[id].shortName}
-              </option>
-            ))}
-          </Select>
-          <Select label="Défenseur" {...register('defender')}>
-            {game.factionsInPlay.map((id) => (
-              <option key={id} value={id}>
-                {FACTIONS[id].shortName}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label="Troupes attaquant"
-            type="number"
-            {...register('attackerTroops')}
-            error={formState.errors.attackerTroops?.message}
-          />
-          <Input
-            label="Troupes défenseur"
-            type="number"
-            {...register('defenderTroops')}
-            error={formState.errors.defenderTroops?.message}
-          />
-          <Input label="Pertes attaquant" type="number" {...register('attackerLosses')} />
-          <Input label="Pertes défenseur" type="number" {...register('defenderLosses')} />
-          <Select label="Issue" {...register('outcome')} className="col-span-2">
-            <option value="pending">En cours</option>
-            <option value="attacker_win">Attaquant victorieux</option>
-            <option value="defender_win">Défenseur tient</option>
-          </Select>
-          <Textarea label="Notes" {...register('notes')} className="col-span-2" rows={3} />
-          <div className="col-span-2 flex justify-end gap-2 mt-2">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" variant="gold">
-              Enregistrer
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
+
+// ──────────────────────────────────────────────────────────
+// Battle simulator sub-component
+// ──────────────────────────────────────────────────────────
+
+interface BattleSimulatorProps {
+  attacker: FactionId;
+  defender: FactionId;
+  territory: string;
+  troops: number;
+  dial: number;
+  factionsInPlay: FactionId[];
+  analysis: BattleAnalysis | null;
+  onAttackerChange: (id: FactionId) => void;
+  onDefenderChange: (id: FactionId) => void;
+  onTerritoryChange: (id: string) => void;
+  onTroopsChange: (n: number) => void;
+  onDialChange: (n: number) => void;
+}
+
+const BattleSimulator = ({
+  attacker,
+  defender,
+  territory,
+  troops,
+  dial,
+  factionsInPlay,
+  analysis,
+  onAttackerChange,
+  onDefenderChange,
+  onTerritoryChange,
+  onTroopsChange,
+  onDialChange,
+}: BattleSimulatorProps) => {
+  return (
+    <Card
+      variant="highlight"
+      title={
+        <span className="flex items-center gap-2">
+          <Brain size={14} /> Simulateur Mentat
+        </span>
+      }
+      subtitle="Analyse stratégique avant engagement"
+    >
+      {/* Inputs */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
+        <Select
+          label="Attaquant"
+          value={attacker}
+          onChange={(e) => onAttackerChange(e.target.value as FactionId)}
+        >
+          {factionsInPlay.map((id) => (
+            <option key={id} value={id}>
+              {FACTIONS[id].shortName}
+            </option>
+          ))}
+        </Select>
+        <Select
+          label="Défenseur"
+          value={defender}
+          onChange={(e) => onDefenderChange(e.target.value as FactionId)}
+        >
+          {factionsInPlay.map((id) => (
+            <option key={id} value={id}>
+              {FACTIONS[id].shortName}
+            </option>
+          ))}
+        </Select>
+        <Select
+          label="Territoire"
+          value={territory}
+          onChange={(e) => onTerritoryChange(e.target.value)}
+          className="lg:col-span-1 col-span-2"
+        >
+          {TERRITORIES.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </Select>
+        <Input
+          label="Troupes engagées"
+          type="number"
+          min={0}
+          value={troops}
+          onChange={(e) => onTroopsChange(parseInt(e.target.value, 10) || 0)}
+        />
+        <Input
+          label="Dial max"
+          type="number"
+          min={0}
+          value={dial}
+          onChange={(e) => onDialChange(parseInt(e.target.value, 10) || 0)}
+        />
+      </div>
+
+      {!analysis ? (
+        <p className="text-xs text-atreides-silverMuted text-center py-4">
+          Renseignez les paramètres de bataille pour obtenir une analyse.
+        </p>
+      ) : (
+        <AnalysisDisplay analysis={analysis} />
+      )}
+    </Card>
+  );
+};
+
+// ──────────────────────────────────────────────────────────
+
+const AnalysisDisplay = ({ analysis }: { analysis: BattleAnalysis }) => {
+  const winPct = Math.round(analysis.victoryProbability * 100);
+  const winColor =
+    winPct >= 70
+      ? 'text-emerald-400'
+      : winPct >= 45
+        ? 'text-atreides-gold'
+        : 'text-severity-danger';
+
+  return (
+    <div className="space-y-4">
+      {/* Header : probabilité + recommandations */}
+      <div className="grid lg:grid-cols-3 gap-3">
+        <div className="p-3 rounded border border-atreides-gold/30 bg-atreides-deep/50 text-center">
+          <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center justify-center gap-1">
+            <Target size={11} /> Probabilité victoire
+          </p>
+          <p className={cn('font-display text-3xl tabular-nums mt-1', winColor)}>
+            {winPct}%
+          </p>
+        </div>
+        <div className="p-3 rounded border border-atreides-gold/30 bg-atreides-deep/50">
+          <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1 mb-1">
+            <Crown size={11} /> Leader recommandé
+          </p>
+          {analysis.recommendedLeader ? (
+            <>
+              <p className="text-sm font-serif text-atreides-silver">
+                {analysis.recommendedLeader.leaderName}{' '}
+                <span className="text-atreides-gold text-xs">
+                  val {analysis.recommendedLeader.leaderValue}
+                </span>
+              </p>
+              <p className="text-[10px] text-atreides-silverMuted mt-1 line-clamp-2">
+                {analysis.recommendedLeader.rationale}
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-atreides-silverMuted italic">
+              Aucun leader vivant.
+            </p>
+          )}
+        </div>
+        <div className="p-3 rounded border border-atreides-gold/30 bg-atreides-deep/50">
+          <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1 mb-1">
+            <Target size={11} /> Dial recommandé
+          </p>
+          <p className="font-display text-2xl text-atreides-gold tabular-nums">
+            {analysis.recommendedDial.dial}
+          </p>
+          <p className="text-[10px] text-atreides-silverMuted mt-1 line-clamp-2">
+            {analysis.recommendedDial.rationale}
+          </p>
+        </div>
+      </div>
+
+      {/* Verdict */}
+      <div
+        className={cn(
+          'p-3 rounded border',
+          winPct >= 70
+            ? 'border-emerald-500/40 bg-emerald-500/5'
+            : winPct >= 45
+              ? 'border-atreides-gold/30 bg-atreides-gold/5'
+              : 'border-severity-danger/40 bg-severity-danger/5',
+        )}
+      >
+        <p className="text-[11px] font-display uppercase tracking-wider text-atreides-silverMuted mb-1">
+          Verdict Mentat
+        </p>
+        <p className="text-sm text-atreides-silver leading-relaxed">
+          {analysis.verdict}
+        </p>
+      </div>
+
+      {/* Grille des 14 métriques */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <MetricBox
+          icon={<AlertTriangle size={11} />}
+          label="Risque traître"
+          metric={analysis.traitorRisk}
+        />
+        <MetricBox
+          icon={<Swords size={11} />}
+          label="Arme ennemie"
+          metric={analysis.enemyWeaponRisk}
+        />
+        <MetricBox
+          icon={<ShieldAlert size={11} />}
+          label="Poison / projectile"
+          metric={analysis.poisonProjectileRisk}
+        />
+        <MetricBox
+          icon={<Target size={11} />}
+          label="Full dial ennemi"
+          metric={analysis.fullDialProbability}
+        />
+        <MetricBox
+          icon={<Coins size={11} />}
+          label="Avantage économique"
+          metric={analysis.economicAdvantage}
+        />
+        <MetricBox
+          icon={<Coins size={11} />}
+          label="Coût en épice"
+          metric={analysis.spiceCost}
+        />
+        <MetricBox
+          icon={<TrendingUp size={11} />}
+          label="Trade troupe/épice"
+          metric={analysis.troopSpiceTrade}
+        />
+        <MetricBox
+          icon={<Crown size={11} />}
+          label="Danger leader"
+          metric={analysis.leaderDanger}
+        />
+        <MetricBox
+          icon={<Castle size={11} />}
+          label="Avantage territoire"
+          metric={analysis.territoryAdvantage}
+        />
+        <MetricBox
+          icon={<Brain size={11} />}
+          label="Synergie alliance"
+          metric={analysis.allianceSynergy}
+        />
+        <MetricBox
+          icon={<AlertTriangle size={11} />}
+          label="Contre-attaque"
+          metric={analysis.counterAttackDanger}
+        />
+        <MetricBox
+          icon={<TrendingUp size={11} />}
+          label="Impact long terme"
+          metric={analysis.longTermImpact}
+        />
+        <MetricBox
+          icon={<Target size={11} />}
+          label="Valeur stratégique"
+          metric={analysis.strategicValue}
+        />
+      </div>
+
+      {/* Précédents historiques similaires (kNN) */}
+      {analysis.similarBattles.length > 0 && (
+        <div className="p-3 rounded border border-atreides-gold/20 bg-atreides-deep/40">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] uppercase font-display tracking-wider text-atreides-gold flex items-center gap-1">
+              <Brain size={11} /> Précédents historiques
+            </p>
+            {analysis.knnProbability !== null && (
+              <span className="text-[10px] font-mono text-atreides-silverMuted">
+                kNN : {(analysis.knnProbability * 100).toFixed(0)}% · confiance{' '}
+                {(analysis.knnConfidence * 100).toFixed(0)}%
+              </span>
+            )}
+          </div>
+          <ul className="space-y-1.5">
+            {analysis.similarBattles.map(({ battle, similarity }) => {
+              const winnerIsAttacker = battle.winner === battle.attackerFaction;
+              return (
+                <li
+                  key={battle.gameId}
+                  className="flex items-center gap-2 p-2 rounded bg-atreides-deep/60 border border-atreides-gold/10 text-xs"
+                >
+                  <span className="font-mono text-[10px] text-atreides-silverMuted shrink-0 w-12">
+                    {battle.gameId.replace('GAME_', '#')}
+                  </span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    <FactionIcon faction={battle.attackerFaction} size={16} />
+                    <span className="text-[10px] text-atreides-silver">
+                      {battle.attackerTroops}
+                    </span>
+                  </span>
+                  <span className="text-atreides-silverMuted text-[10px]">vs</span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    <FactionIcon faction={battle.defenderFaction} size={16} />
+                    <span className="text-[10px] text-atreides-silver">
+                      {battle.defenderTroops}
+                    </span>
+                  </span>
+                  <span className="flex-1 text-[10px] text-atreides-silverMuted truncate">
+                    {battle.territory} · T{battle.round}
+                  </span>
+                  <Badge tone={winnerIsAttacker ? 'gold' : 'blue'}>
+                    {winnerIsAttacker ? 'Attaquant' : 'Défenseur'} ·{' '}
+                    {Math.round(battle.battleValue * 100)}%
+                  </Badge>
+                  <span
+                    className="font-mono text-[10px] text-atreides-gold/70 shrink-0 w-12 text-right"
+                    title="Similarité avec votre simulation"
+                  >
+                    {Math.round(similarity * 100)}%
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {analysis.knnProbability !== null && (
+            <p className="text-[10px] text-atreides-silverMuted italic mt-2">
+              Probabilité finale = mix heuristique ({(analysis.heuristicProbability * 100).toFixed(0)}%)
+              {' '}+ moyenne pondérée des précédents (
+              {(analysis.knnProbability * 100).toFixed(0)}%).
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Cartes dangereuses */}
+      {analysis.dangerousCards.length > 0 && (
+        <div className="p-3 rounded border border-severity-danger/30 bg-severity-danger/5">
+          <p className="text-[11px] uppercase font-display tracking-wider text-severity-danger mb-2 flex items-center gap-1">
+            <ShieldAlert size={11} /> Cartes adverses dangereuses
+          </p>
+          <ul className="space-y-1">
+            {analysis.dangerousCards.map((c) => (
+              <li key={c.name} className="text-xs flex items-baseline gap-2">
+                <Badge tone="red">{c.type}</Badge>
+                <span className="text-atreides-silver font-serif">{c.name}</span>
+                <span className="text-[10px] text-atreides-silverMuted">{c.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Camp info */}
+      <div className="flex items-center justify-center gap-4 pt-2 border-t border-atreides-gold/10 text-xs">
+        <span className="flex items-center gap-1.5">
+          <FactionIcon faction={analysis.attackerId} size={18} />
+          <span style={{ color: factionTextColor(analysis.attackerId) }}>
+            {FACTIONS[analysis.attackerId].shortName}
+          </span>
+        </span>
+        <span className="font-display text-atreides-gold">VS</span>
+        <span className="flex items-center gap-1.5">
+          <FactionIcon faction={analysis.defenderId} size={18} />
+          <span style={{ color: factionTextColor(analysis.defenderId) }}>
+            {FACTIONS[analysis.defenderId].shortName}
+          </span>
+        </span>
+        <span className="text-atreides-silverMuted">·</span>
+        <span className="text-atreides-silver">
+          {analysis.territory?.name ?? '—'}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────────────────
+
+interface MetricBoxProps {
+  icon: React.ReactNode;
+  label: string;
+  metric: Metric;
+}
+
+const LEVEL_TONE: Record<Metric['level'], string> = {
+  low: 'border-emerald-500/30 bg-emerald-500/5',
+  moderate: 'border-atreides-gold/30 bg-atreides-gold/5',
+  high: 'border-orange-500/40 bg-orange-500/5',
+  critical: 'border-severity-danger/50 bg-severity-danger/10',
+  positive: 'border-emerald-500/40 bg-emerald-500/5',
+  negative: 'border-severity-danger/40 bg-severity-danger/5',
+  neutral: 'border-atreides-gold/15 bg-atreides-deep/40',
+};
+
+const LEVEL_TEXT: Record<Metric['level'], string> = {
+  low: 'text-emerald-300',
+  moderate: 'text-atreides-gold',
+  high: 'text-orange-300',
+  critical: 'text-severity-danger',
+  positive: 'text-emerald-300',
+  negative: 'text-severity-danger',
+  neutral: 'text-atreides-silver',
+};
+
+const MetricBox = ({ icon, label, metric }: MetricBoxProps) => (
+  <div className={cn('p-2 rounded border', LEVEL_TONE[metric.level])}>
+    <div className="flex items-center justify-between mb-1">
+      <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1">
+        {icon} {label}
+      </span>
+      <span className={cn('text-[11px] font-mono', LEVEL_TEXT[metric.level])}>
+        {metric.label}
+      </span>
+    </div>
+    <p className="text-[11px] text-atreides-silver/90 leading-snug">
+      {metric.reason}
+    </p>
+  </div>
+);

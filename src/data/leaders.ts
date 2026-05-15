@@ -13,7 +13,7 @@ const seed: Record<FactionId, LeaderSeed[]> = {
   ],
   harkonnen: [
     { name: 'Umman Kudu', factionId: 'harkonnen', value: 1, portrait: '/leaders/harkonnen/umman-kudu.jpg' },
-    { name: 'Captain Iakin Nefud', factionId: 'harkonnen', value: 3, portrait: '/leaders/harkonnen/captain-iakin-nefud.jpg' },
+    { name: 'Captain Iakin Nefud', factionId: 'harkonnen', value: 2, portrait: '/leaders/harkonnen/captain-iakin-nefud.jpg' },
     { name: 'Piter de Vries', factionId: 'harkonnen', value: 3, portrait: '/leaders/harkonnen/piter-de-vries.jpg' },
     { name: 'Beast Rabban', factionId: 'harkonnen', value: 4, portrait: '/leaders/harkonnen/beast-rabban.jpg' },
     { name: 'Feyd-Rautha', factionId: 'harkonnen', value: 6, portrait: '/leaders/harkonnen/feyd-rautha.jpg' },
@@ -22,7 +22,7 @@ const seed: Record<FactionId, LeaderSeed[]> = {
   emperor: [
     { name: 'Bashar', factionId: 'emperor', value: 2, portrait: '/leaders/emperor/bashar.jpg' },
     { name: 'Burseg', factionId: 'emperor', value: 3, portrait: '/leaders/emperor/burseg.jpg' },
-    { name: 'Caid', factionId: 'emperor', value: 5, portrait: '/leaders/emperor/caid.jpg' },
+    { name: 'Caid', factionId: 'emperor', value: 3, portrait: '/leaders/emperor/caid.jpg' },
     { name: 'Captain Aramsham', factionId: 'emperor', value: 5, portrait: '/leaders/emperor/captain-aramsham.jpg' },
     { name: 'Hasimir Fenring', factionId: 'emperor', value: 6, portrait: '/leaders/emperor/hasimir-fenring.jpg' },
     { name: 'Emperor Shaddam IV', factionId: 'emperor', value: 10, portrait: '/leaders/emperor/emperor-shaddam-iv.jpg' },
@@ -37,10 +37,10 @@ const seed: Record<FactionId, LeaderSeed[]> = {
   ],
   guild: [
     { name: 'Guild Rep', factionId: 'guild', value: 1, portrait: '/leaders/guild/guild-rep.jpg' },
-    { name: 'Guild Ambassador', factionId: 'guild', value: 3, portrait: '/leaders/guild/guild-ambassador.jpg' },
+    { name: 'Guild Ambassador', factionId: 'guild', value: 2, portrait: '/leaders/guild/guild-ambassador.jpg' },
+    { name: 'Master Bewt', factionId: 'guild', value: 3, portrait: '/leaders/guild/master-bewt.jpg' },
     { name: 'Esmar Tuek', factionId: 'guild', value: 3, portrait: '/leaders/guild/esmar-tuek.jpg' },
     { name: 'Staban Tuek', factionId: 'guild', value: 5, portrait: '/leaders/guild/staban-tuek.jpg' },
-    { name: 'Master Bewt', factionId: 'guild', value: 6, portrait: '/leaders/guild/master-bewt.jpg' },
     { name: 'Edric', factionId: 'guild', value: 10, portrait: '/leaders/guild/edric.jpg' },
   ],
   bene_gesserit: [
@@ -53,8 +53,14 @@ const seed: Record<FactionId, LeaderSeed[]> = {
   ],
 };
 
-export const buildLeadersFor = (faction: FactionId, makeId: () => string): Leader[] =>
-  seed[faction].map((l) => ({ ...l, id: makeId(), alive: true }));
+export const buildLeadersFor = (
+  faction: FactionId,
+  makeId: () => string,
+  includeValue10 = false,
+): Leader[] =>
+  seed[faction]
+    .filter((l) => (includeValue10 ? true : l.value < 10))
+    .map((l) => ({ ...l, id: makeId(), alive: true }));
 
 export const LEADER_SEED = seed;
 

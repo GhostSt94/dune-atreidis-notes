@@ -3,7 +3,7 @@ import { StickyNote, Layers, Swords, Brain, Handshake } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const items = [
-  { to: '/game', label: 'Cartes', icon: Layers, end: true },
+  { to: '/game', label: 'Tracker', icon: Layers, end: true },
   { to: '/game/notes', label: 'Notes', icon: StickyNote },
   { to: '/game/battles', label: 'Batailles', icon: Swords },
   { to: '/game/alliances', label: 'Alliances', icon: Handshake },

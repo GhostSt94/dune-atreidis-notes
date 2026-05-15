@@ -13,12 +13,17 @@ import {
   RotateCw,
   Castle,
   MapPin,
+  Filter,
+  LayoutGrid,
+  Layers,
+  ChevronDown,
 } from 'lucide-react';
 import {
   useCardsStore,
   useCurrentGame,
   useTraitorsStore,
   useFactionStore,
+  useSettingsStore,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
 import { TREACHERY_CARDS, getCard } from '@/data/cards';
@@ -51,6 +56,7 @@ const TYPE_TONE: Record<CardType, 'red' | 'blue' | 'gold' | 'neutral'> = {
 };
 
 type AddTarget = { factionId: FactionId } | { eliminated: true };
+type ViewMode = 'full' | 'cards';
 
 const TOTAL_TROOPS = 20;
 
@@ -75,6 +81,9 @@ export const CardsPage = () => {
   const [revealEntry, setRevealEntry] = useState<CardTrackerEntry | null>(null);
   const [traitorPickTarget, setTraitorPickTarget] = useState<Traitor | null>(null);
   const [addingTraitorFor, setAddingTraitorFor] = useState<FactionId | null>(null);
+  const [selectedFactions, setSelectedFactions] = useState<Set<FactionId>>(new Set());
+  const [viewMode, setViewMode] = useState<ViewMode>('full');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   if (!game) return <Navigate to="/games" replace />;
 
@@ -214,29 +223,108 @@ export const CardsPage = () => {
 
   return (
     <div className="px-4 lg:px-6 py-6">
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-        <div>
-          <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-            Tracker de cartes
-          </h1>
-          <p className="text-xs text-atreides-silverMuted mt-1">
-            Cartes en main + traîtres connus, zone par faction. Atreides voit chaque enchère ;
-            Harkonnen connaît ses 4 traîtres.
-          </p>
+      {/* Barre de filtre des factions */}
+      <div className="mb-4 rounded border border-atreides-gold/15 bg-atreides-deep/40">
+        {/* Header repliable mobile */}
+        <button
+          onClick={() => setFiltersOpen((o) => !o)}
+          className="sm:hidden w-full flex items-center justify-between gap-2 p-2 text-xs font-display uppercase tracking-wider text-atreides-silver"
+          aria-expanded={filtersOpen}
+        >
+          <span className="flex items-center gap-1.5">
+            <Filter size={12} className="text-atreides-gold" /> Filtres
+            {(selectedFactions.size > 0 || viewMode === 'cards') && (
+              <span className="ml-1 text-[10px] text-atreides-gold font-mono normal-case tracking-normal">
+                {selectedFactions.size > 0 && `${selectedFactions.size} faction(s)`}
+                {selectedFactions.size > 0 && viewMode === 'cards' && ' · '}
+                {viewMode === 'cards' && 'Cartes'}
+              </span>
+            )}
+          </span>
+          <ChevronDown
+            size={14}
+            className={cn('transition-transform', filtersOpen && 'rotate-180')}
+          />
+        </button>
+        <div
+          className={cn(
+            'flex items-center flex-wrap gap-2 p-2 sm:flex',
+            !filtersOpen && 'hidden',
+            filtersOpen && 'border-t border-atreides-gold/15 sm:border-t-0',
+          )}
+        >
+        <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5 mr-1">
+          <Filter size={11} /> Filtrer
+        </span>
+        {game.factionsInPlay.map((id) => {
+          const isActive = selectedFactions.has(id);
+          const isDimmed = selectedFactions.size > 0 && !isActive;
+          return (
+            <button
+              key={id}
+              onClick={() => {
+                setSelectedFactions((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id);
+                  else next.add(id);
+                  return next;
+                });
+              }}
+              title={FACTIONS[id].shortName}
+              aria-pressed={isActive}
+              className={cn(
+                'shrink-0 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all',
+                isActive
+                  ? 'border-atreides-gold shadow-goldGlow scale-110'
+                  : 'border-atreides-gold/15 hover:border-atreides-gold/50',
+                isDimmed && 'opacity-40 grayscale',
+              )}
+            >
+              <FactionIcon faction={id} size={28} />
+            </button>
+          );
+        })}
+        {selectedFactions.size > 0 && (
+          <button
+            onClick={() => setSelectedFactions(new Set())}
+            className="sm:ml-auto text-[11px] font-display uppercase tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors flex items-center gap-1"
+          >
+            <X size={11} /> Tout afficher
+          </button>
+        )}
+        <div
+          className={cn(
+            'flex items-center gap-1.5',
+            selectedFactions.size > 0 ? 'sm:ml-2' : 'sm:ml-auto',
+          )}
+        >
+          <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
+            <Eye size={11} /> Traqué
+          </span>
+          <div className="flex items-center gap-0.5 rounded border border-atreides-gold/15 p-0.5">
+            <ViewModeBtn
+              active={viewMode === 'full'}
+              onClick={() => setViewMode('full')}
+              icon={<LayoutGrid size={11} />}
+              label="Tout"
+            />
+            <ViewModeBtn
+              active={viewMode === 'cards'}
+              onClick={() => setViewMode('cards')}
+              icon={<Layers size={11} />}
+              label="Cartes"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs font-mono text-atreides-silverMuted">
-          <span>
-            <span className="text-atreides-gold">{inHand.length}</span> cartes en main
-          </span>
-          <span>
-            <span className="text-severity-danger">{eliminated.length}</span> éliminées
-          </span>
         </div>
       </div>
 
       {/* Zones par faction */}
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {game.factionsInPlay.map((id) => {
+        {(selectedFactions.size === 0
+          ? game.factionsInPlay
+          : game.factionsInPlay.filter((id) => selectedFactions.has(id))
+        ).map((id) => {
           const meta = FACTIONS[id];
           const factionEntries = cardsByFaction.get(id) ?? [];
           const factionTraitors = traitorsByFaction.get(id) ?? [];
@@ -275,6 +363,8 @@ export const CardsPage = () => {
               }
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
+              {viewMode === 'full' && (
+              <>
               {/* Épice — ligne compacte */}
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="flex items-baseline gap-1.5">
@@ -410,6 +500,9 @@ export const CardsPage = () => {
                 </div>
               )}
 
+              </>
+              )}
+
               {/* Cartes en main */}
               <SectionHeader
                 label="Cartes"
@@ -437,6 +530,7 @@ export const CardsPage = () => {
               </button>
 
               {/* Traîtres */}
+              {viewMode === 'full' && (
               <div className="mt-5">
                 <SectionHeader
                   label="Traîtres"
@@ -464,6 +558,7 @@ export const CardsPage = () => {
                   <Plus size={12} /> Ajouter un traître
                 </button>
               </div>
+              )}
             </UICard>
           );
         })}
@@ -602,13 +697,39 @@ const SpiceBtn = ({
   <button
     onClick={onClick}
     className={cn(
-      'px-1.5 py-0.5 rounded text-[11px] transition-colors min-w-[26px]',
+      'px-2 py-1 rounded text-xs transition-colors min-w-[32px] sm:px-1.5 sm:py-0.5 sm:text-[11px] sm:min-w-[26px]',
       accent
         ? 'text-atreides-gold hover:bg-atreides-gold/15'
         : 'text-atreides-silverMuted hover:text-atreides-silver hover:bg-atreides-navy/40',
     )}
   >
     {children}
+  </button>
+);
+
+const ViewModeBtn = ({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) => (
+  <button
+    onClick={onClick}
+    aria-pressed={active}
+    className={cn(
+      'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-display uppercase tracking-wider transition-colors',
+      active
+        ? 'bg-atreides-gold/15 text-atreides-gold'
+        : 'text-atreides-silverMuted hover:text-atreides-silver',
+    )}
+  >
+    {icon}
+    {label}
   </button>
 );
 
@@ -635,7 +756,7 @@ const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarPr
     title={`${name} · valeur ${value}${alive ? '' : ' · tombé'}`}
     aria-label={`${name} (${alive ? 'vivant' : 'tombé'}) — cliquer pour basculer`}
     className={cn(
-      'relative shrink-0 w-9 h-9 rounded-full overflow-hidden border-2 transition-all',
+      'relative shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 transition-all',
       alive
         ? 'border-atreides-gold/40 hover:border-atreides-gold/80 hover:scale-105'
         : 'border-severity-danger/50 hover:border-severity-danger',
@@ -664,7 +785,7 @@ const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarPr
     )}
     {!alive && (
       <span className="absolute inset-0 flex items-center justify-center bg-atreides-deep/40">
-        <Skull size={14} className="text-severity-danger drop-shadow-[0_0_4px_rgba(127,29,29,0.8)]" />
+        <Skull size={18} className="text-severity-danger drop-shadow-[0_0_4px_rgba(127,29,29,0.8)]" />
       </span>
     )}
   </button>
@@ -987,6 +1108,7 @@ const LeaderCatalog = ({
   allowedCurrentKey,
 }: LeaderCatalogProps) => {
   const [search, setSearch] = useState('');
+  const includeValue10 = useSettingsStore((s) => s.useValue10Leaders);
   const isUsed = (id: FactionId, name: string) => {
     if (!usedLeaderKeys) return false;
     const key = `${id}|${name}`;
@@ -1023,6 +1145,7 @@ const LeaderCatalog = ({
         {FACTION_IDS.map((id) => {
           const leaders = LEADER_SEED[id].filter(
             (l) =>
+              (includeValue10 || l.value < 10) &&
               !isUsed(id, l.name) &&
               (search.trim() ? l.name.toLowerCase().includes(search.toLowerCase()) : true),
           );

@@ -36,12 +36,13 @@ export const analyze = (
   factions: Record<FactionId, FactionState>,
   controls: Record<string, TerritoryControl>,
   cards: CardTrackerEntry[],
+  traitors: import('@/types/traitor').Traitor[] = [],
 ): AnalysisReport => {
   const threats = {} as Record<FactionId, ThreatBreakdown>;
   const hands = {} as Record<FactionId, HandEstimate>;
 
   Object.values(factions).forEach((f) => {
-    threats[f.id] = computeThreatScore(f, controls, cards);
+    threats[f.id] = computeThreatScore(f, factions, controls, cards, traitors, game.id);
     hands[f.id] = estimateHand(f.id, cards);
   });
 
@@ -51,12 +52,16 @@ export const analyze = (
     factions,
     controls,
     threats,
+    cards,
+    traitors,
   );
   const potentialAllianceDangers = computePotentialDangers(
     game,
     factions,
     controls,
     threats,
+    cards,
+    traitors,
   );
   const winProbs = computeWinProbabilities(factions, controls, game.currentTurn);
 

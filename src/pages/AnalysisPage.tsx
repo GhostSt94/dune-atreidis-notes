@@ -9,6 +9,7 @@ import { ThreatMeter } from '@/components/ui/ThreatMeter';
 import { FactionPill } from '@/components/ui/FactionPill';
 import { PhaseTracker } from '@/components/widgets/PhaseTracker';
 import { FactionsOverview } from '@/components/widgets/FactionsOverview';
+import { FactionComparisonTable } from '@/components/widgets/FactionComparisonTable';
 import { AlertsPanel } from '@/components/widgets/AlertsPanel';
 import { QuickNote } from '@/components/widgets/QuickNote';
 import { AlliancesPanel } from '@/components/widgets/AlliancesPanel';
@@ -35,6 +36,8 @@ export const AnalysisPage = () => {
 
       {/* ─── Vue d'ensemble : phase + widgets ─── */}
       <PhaseTracker />
+
+      <FactionComparisonTable />
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">

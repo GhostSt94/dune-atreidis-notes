@@ -1,5 +1,4 @@
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { Download, Upload, RotateCcw, User, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Toggle } from '@/components/ui/Toggle';
@@ -29,6 +28,8 @@ export const SettingsPage = () => {
   const setDensity = useSettingsStore((s) => s.setDensity);
   const mobile = useSettingsStore((s) => s.mobileQuickAccess);
   const toggleMobile = useSettingsStore((s) => s.toggleMobileQuickAccess);
+  const useValue10 = useSettingsStore((s) => s.useValue10Leaders);
+  const toggleValue10 = useSettingsStore((s) => s.toggleValue10Leaders);
   const profile = useProfileStore((s) => s.profile);
   const clearProfile = useProfileStore((s) => s.clearProfile);
 
@@ -105,12 +106,15 @@ export const SettingsPage = () => {
   return (
     <div className="px-4 lg:px-6 py-6 max-w-3xl mx-auto space-y-4">
       <div>
-        <Link
-          to="/games"
+        <button
+          onClick={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate('/games');
+          }}
           className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
         >
-          <ArrowLeft size={14} /> Retour aux parties
-        </Link>
+          <ArrowLeft size={14} /> Retour
+        </button>
         <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
           Paramètres
         </h1>
@@ -178,6 +182,15 @@ export const SettingsPage = () => {
             </Button>
           </div>
         </div>
+      </Card>
+
+      <Card title="Règles du jeu" subtitle="S'applique aux nouvelles parties">
+        <Toggle
+          checked={useValue10}
+          onChange={toggleValue10}
+          label="Inclure les leaders valeur 10"
+          description="Active Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes et Edric dans le pool de leaders + traîtres. Désactivé par défaut (jeu standard)."
+        />
       </Card>
 
       <Card title="Sauvegarde">
