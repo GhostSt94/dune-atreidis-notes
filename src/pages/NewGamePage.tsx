@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
 import { FactionIcon } from '@/components/icons/FactionIcon';
+import { useT } from '@/i18n';
 
 export const NewGamePage = () => {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [playerCount, setPlayerCount] = useState(6);
@@ -54,12 +56,12 @@ export const NewGamePage = () => {
           <ArrowLeft size={18} />
         </button>
         <h1 className="font-display uppercase tracking-widest text-atreides-gold">
-          Nouvelle partie
+          {t('newGame.title')}
         </h1>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        {['Identité', 'Factions', 'Confirmation'].map((label, i) => (
+        {[t('newGame.steps.identity'), t('newGame.steps.factions'), t('newGame.steps.confirm')].map((label, i) => (
           <div key={label} className="flex-1 flex items-center">
             <div
               className={cn(
@@ -95,14 +97,14 @@ export const NewGamePage = () => {
               className="flex flex-col gap-4"
             >
               <Input
-                label="Nom de la partie"
-                placeholder="Première Guerre d'Arrakis"
+                label={t('newGame.name')}
+                placeholder={t('newGame.namePlaceholderLong')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
               />
               <Input
-                label="Nombre de joueurs"
+                label={t('newGame.playerCount')}
                 type="number"
                 min={2}
                 max={6}
@@ -142,17 +144,17 @@ export const NewGamePage = () => {
                       <div className="flex items-center gap-2">
                         <FactionIcon faction={id} size={24} />
                         <span className="font-serif text-sm" style={{ color: factionTextColor(id) }}>
-                          {meta.shortName}
+                          {t(`faction.${id}.short`)}
                         </span>
                       </div>
                       {isPlayer && (
                         <span className="text-[10px] font-mono text-atreides-gold uppercase">
-                          Vous
+                          {t('newGame.you')}
                         </span>
                       )}
                     </div>
                     <p className="text-[11px] text-atreides-silverMuted mt-1 italic">
-                      {meta.motto}
+                      {t(`faction.${id}.motto`)}
                     </p>
                   </button>
                 );
@@ -170,32 +172,32 @@ export const NewGamePage = () => {
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                    Nom
+                    {t('newGame.summary.name')}
                   </p>
                   <p className="text-atreides-silver">{name || '—'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                    Joueurs
+                    {t('newGame.summary.players')}
                   </p>
                   <p className="text-atreides-silver">{playerCount}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                    Factions ({factions.size})
+                    {t('newGame.summary.factions', { count: factions.size })}
                   </p>
                   <p className="text-atreides-silver">
                     {Array.from(factions)
-                      .map((f) => FACTIONS[f].shortName)
+                      .map((f) => t(`faction.${f}.short`))
                       .join(' · ')}
                   </p>
                 </div>
                 <div className="mt-4 p-3 rounded bg-atreides-blue/10 border border-atreides-gold/20">
                   <p className="text-xs text-atreides-gold font-display uppercase tracking-wider mb-1">
-                    Avantage Atreides
+                    {t('newGame.atreidesAdvantage')}
                   </p>
                   <p className="text-[12px] text-atreides-silver leading-relaxed">
-                    {FACTIONS.atreides.specialAbility}
+                    {t('faction.atreides.ability')}
                   </p>
                 </div>
               </div>
@@ -205,7 +207,7 @@ export const NewGamePage = () => {
 
         <div className="flex justify-between mt-6 pt-4 border-t border-atreides-gold/10">
           <Button variant="ghost" onClick={back} disabled={step === 0} leftIcon={<ArrowLeft size={14} />}>
-            Précédent
+            {t('newGame.previous')}
           </Button>
           {step < 2 ? (
             <Button
@@ -214,11 +216,11 @@ export const NewGamePage = () => {
               disabled={(step === 0 && !name.trim()) || (step === 1 && factions.size < 2)}
               rightIcon={<ArrowRight size={14} />}
             >
-              Suivant
+              {t('newGame.next')}
             </Button>
           ) : (
             <Button variant="gold" onClick={submit} rightIcon={<Check size={14} />}>
-              Lancer la partie
+              {t('newGame.launch')}
             </Button>
           )}
         </div>

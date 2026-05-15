@@ -12,16 +12,17 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
 import { relativeTime } from '@/lib/date';
+import { useT } from '@/i18n';
 
-const CATEGORIES: { id: NoteCategory; label: string }[] = [
-  { id: 'enemy_plan', label: 'Plan ennemi' },
-  { id: 'traitor', label: 'Traîtrise' },
-  { id: 'leader', label: 'Leader' },
-  { id: 'battle', label: 'Bataille' },
-  { id: 'alliance', label: 'Alliance' },
-  { id: 'revealed_info', label: 'Info révélée' },
-  { id: 'mentat', label: 'Mentat' },
-  { id: 'spice_economy', label: 'Économie' },
+const CATEGORY_IDS: NoteCategory[] = [
+  'enemy_plan',
+  'traitor',
+  'leader',
+  'battle',
+  'alliance',
+  'revealed_info',
+  'mentat',
+  'spice_economy',
 ];
 
 const priorityTone: Record<NotePriority, 'neutral' | 'gold' | 'red'> = {
@@ -32,6 +33,7 @@ const priorityTone: Record<NotePriority, 'neutral' | 'gold' | 'red'> = {
 };
 
 export const NotesPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const notes = useNotesStore((s) => s.notes);
   const addNote = useNotesStore((s) => s.addNote);
@@ -84,15 +86,15 @@ export const NotesPage = () => {
     <div className="px-4 lg:px-6 py-6">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
         <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-          Notes stratégiques
+          {t('notes.titleHeader')}
         </h1>
         <Button variant="gold" leftIcon={<Plus size={14} />} onClick={() => setDraftOpen(true)}>
-          Nouvelle note
+          {t('notes.add')}
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-4">
-        <Card title="Filtres">
+        <Card title={t('notes.filters')}>
           <div className="space-y-3">
             <div className="relative">
               <Search
@@ -102,15 +104,15 @@ export const NotesPage = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher..."
+                placeholder={t('notes.searchPlaceholder')}
                 className="pl-7"
               />
             </div>
             <Select value={filter} onChange={(e) => setFilter(e.target.value as never)}>
-              <option value="all">Toutes catégories</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
+              <option value="all">{t('notes.allCategories')}</option>
+              {CATEGORY_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {t(`notes.cat.${id}`)}
                 </option>
               ))}
             </Select>
@@ -120,7 +122,7 @@ export const NotesPage = () => {
         <div className="space-y-2">
           {filtered.length === 0 ? (
             <Card>
-              <EmptyState title="Aucune note" description="Commencez à consigner vos observations." />
+              <EmptyState title={t('notes.empty.title')} description={t('notes.empty.desc')} />
             </Card>
           ) : (
             filtered.map((n, i) => (
@@ -135,7 +137,7 @@ export const NotesPage = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <Badge tone="neutral">
-                          {CATEGORIES.find((c) => c.id === n.category)?.label}
+                          {t(`notes.cat.${n.category}`)}
                         </Badge>
                         <Badge tone={priorityTone[n.priority]}>{n.priority}</Badge>
                         <span className="text-[10px] text-atreides-silverMuted font-mono">
@@ -165,14 +167,14 @@ export const NotesPage = () => {
                             ? 'text-atreides-gold'
                             : 'text-atreides-silverMuted hover:text-atreides-gold'
                         }
-                        title="Épingler"
+                        title={t('notes.pin')}
                       >
                         <Pin size={14} />
                       </button>
                       <button
                         onClick={() => deleteNote(n.id)}
                         className="text-atreides-silverMuted hover:text-severity-danger"
-                        title="Supprimer"
+                        title={t('common.delete')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -185,49 +187,49 @@ export const NotesPage = () => {
         </div>
       </div>
 
-      <Modal open={draftOpen} onClose={() => setDraftOpen(false)} title="Nouvelle note" size="lg">
+      <Modal open={draftOpen} onClose={() => setDraftOpen(false)} title={t('notes.draft.title')} size="lg">
         <div className="space-y-3">
           <Input
-            label="Titre"
+            label={t('notes.draft.titleField')}
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-            placeholder="Mise élevée Harkonnen"
+            placeholder={t('notes.draft.titlePlaceholder')}
           />
           <Textarea
-            label="Contenu"
+            label={t('notes.draft.body')}
             value={draft.body}
             onChange={(e) => setDraft({ ...draft, body: e.target.value })}
             rows={5}
           />
           <div className="grid grid-cols-2 gap-3">
             <Select
-              label="Catégorie"
+              label={t('notes.draft.category')}
               value={draft.category}
               onChange={(e) => setDraft({ ...draft, category: e.target.value as NoteCategory })}
             >
-              {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
+              {CATEGORY_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {t(`notes.cat.${id}`)}
                 </option>
               ))}
             </Select>
             <Select
-              label="Priorité"
+              label={t('notes.draft.priority')}
               value={draft.priority}
               onChange={(e) => setDraft({ ...draft, priority: e.target.value as NotePriority })}
             >
-              <option value="low">Faible</option>
-              <option value="medium">Moyenne</option>
-              <option value="high">Élevée</option>
-              <option value="critical">Critique</option>
+              <option value="low">{t('notes.prio.low')}</option>
+              <option value="medium">{t('notes.prio.medium')}</option>
+              <option value="high">{t('notes.prio.high')}</option>
+              <option value="critical">{t('notes.prio.critical')}</option>
             </Select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => setDraftOpen(false)}>
-              Annuler
+              {t('notes.cancel')}
             </Button>
             <Button variant="gold" onClick={submitDraft}>
-              Consigner
+              {t('notes.save')}
             </Button>
           </div>
         </div>

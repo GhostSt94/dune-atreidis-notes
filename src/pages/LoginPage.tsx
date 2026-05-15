@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { AtreidesIcon } from '@/components/icons/FactionIcon';
+import { useT } from '@/i18n';
 
 export const LoginPage = () => {
+  const t = useT();
   const [pseudo, setPseudo] = useState('');
   const [prefix, setPrefix] = useState<'Duke' | 'Count' | 'Baron' | 'Lord' | 'Lady'>('Duke');
   const setProfile = useProfileStore((s) => s.setProfile);
@@ -45,7 +47,7 @@ export const LoginPage = () => {
 
         <div className="flex flex-col gap-4">
           <Select
-            label="Titre"
+            label={t('login.title')}
             value={prefix}
             onChange={(e) => setPrefix(e.target.value as typeof prefix)}
           >
@@ -56,14 +58,14 @@ export const LoginPage = () => {
             <option value="Lady">Lady</option>
           </Select>
           <Input
-            label="Nom de noble"
+            label={t('login.nobleName')}
             placeholder="Leto"
             value={pseudo}
             onChange={(e) => setPseudo(e.target.value)}
             autoFocus
           />
           <Button type="submit" variant="gold" size="lg" className="mt-2">
-            Entrer dans l&apos;Imperium
+            {t('login.enter')}
           </Button>
         </div>
 

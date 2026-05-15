@@ -20,8 +20,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { FactionPill } from '@/components/ui/FactionPill';
 import { formatDateTime, relativeTime } from '@/lib/date';
 import { downloadJson, EXPORT_VERSION, type GameExport } from '@/lib/exportImport';
+import { useT } from '@/i18n';
 
 export const GamesListPage = () => {
+  const t = useT();
   const profile = useProfileStore((s) => s.profile);
   const games = useGameStore((s) => s.games);
   const loadGame = useGameStore((s) => s.loadGame);
@@ -60,7 +62,8 @@ export const GamesListPage = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Supprimer cette partie définitivement ?')) cascadeDeleteGame(id);
+    const game = games[id];
+    if (confirm(t('games.deleteConfirm', { name: game?.name ?? '' }))) cascadeDeleteGame(id);
   };
 
   const list = Object.values(games).sort((a, b) => b.updatedAt - a.updatedAt);
@@ -70,28 +73,28 @@ export const GamesListPage = () => {
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
           <p className="text-xs uppercase tracking-widest text-atreides-silverMuted font-display">
-            Salutations
+            {t('games.salute', { name: '' })}
           </p>
           <h1 className="font-display text-2xl lg:text-3xl text-atreides-gold uppercase tracking-wider mt-1">
             {profile?.housePrefix} {profile?.pseudo}
           </h1>
           <p className="text-sm text-atreides-silverMuted mt-1">
-            Sélectionnez ou créez une chronique stratégique.
+            {t('games.subtitle')}
           </p>
         </div>
         <Button variant="gold" leftIcon={<Plus size={16} />} onClick={() => navigate('/games/new')}>
-          Nouvelle partie
+          {t('games.new')}
         </Button>
       </div>
 
       {list.length === 0 ? (
         <Card>
           <EmptyState
-            title="Aucune chronique"
-            description="Lancez votre première partie pour commencer à suivre vos campagnes Atreides."
+            title={t('games.empty.title')}
+            description={t('games.empty.desc')}
             action={
               <Button variant="primary" leftIcon={<Plus size={14} />} onClick={() => navigate('/games/new')}>
-                Créer une partie
+                {t('games.new')}
               </Button>
             }
           />
@@ -116,27 +119,27 @@ export const GamesListPage = () => {
                   ))}
                 </div>
                 <div className="flex items-center justify-between text-xs text-atreides-silverMuted font-mono mb-4">
-                  <span>Tour {g.currentTurn}</span>
-                  <span className="uppercase">{g.currentPhase}</span>
-                  {g.status === 'paused' && <Badge tone="neutral"><Pause size={9} /> Pause</Badge>}
-                  {g.status === 'finished' && <Badge tone="gold">Terminée</Badge>}
+                  <span>{t('topbar.turn')} {g.currentTurn}</span>
+                  <span className="uppercase">{t(`phase.${g.currentPhase}`)}</span>
+                  {g.status === 'paused' && <Badge tone="neutral"><Pause size={9} /> {t('common.phase')}</Badge>}
+                  {g.status === 'finished' && <Badge tone="gold">✓</Badge>}
                 </div>
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-atreides-gold/10">
                   <Button size="sm" variant="gold" leftIcon={<Play size={12} />} onClick={() => handleOpen(g.id)}>
-                    Ouvrir
+                    {t('games.open')}
                   </Button>
                   <Button size="sm" variant="ghost" leftIcon={<Copy size={12} />} onClick={() => duplicate(g.id)}>
-                    Dupliquer
+                    {t('games.duplicate')}
                   </Button>
                   <Button size="sm" variant="ghost" leftIcon={<Download size={12} />} onClick={() => handleExport(g.id)}>
-                    Exporter
+                    {t('games.export')}
                   </Button>
                   <Button size="sm" variant="ghost" leftIcon={<Trash2 size={12} />} onClick={() => handleDelete(g.id)}>
-                    Suppr.
+                    {t('common.delete')}
                   </Button>
                 </div>
                 <p className="text-[10px] text-atreides-silverMuted mt-3 font-mono">
-                  Créée {formatDateTime(g.createdAt)}
+                  {formatDateTime(g.createdAt)}
                 </p>
               </Card>
             </motion.div>

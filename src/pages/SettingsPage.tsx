@@ -3,6 +3,7 @@ import { Download, Upload, RotateCcw, User, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
+import { useT } from '@/i18n';
 import {
   useSettingsStore,
   useProfileStore,
@@ -20,6 +21,7 @@ import { storage } from '@/lib/storage';
 import { useNavigate } from 'react-router-dom';
 
 export const SettingsPage = () => {
+  const t = useT();
   const fog = useSettingsStore((s) => s.fogOfWar);
   const toggleFog = useSettingsStore((s) => s.toggleFog);
   const autosave = useSettingsStore((s) => s.autosaveToast);
@@ -30,6 +32,8 @@ export const SettingsPage = () => {
   const toggleMobile = useSettingsStore((s) => s.toggleMobileQuickAccess);
   const useValue10 = useSettingsStore((s) => s.useValue10Leaders);
   const toggleValue10 = useSettingsStore((s) => s.toggleValue10Leaders);
+  const language = useSettingsStore((s) => s.language);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
   const profile = useProfileStore((s) => s.profile);
   const clearProfile = useProfileStore((s) => s.clearProfile);
 
@@ -86,19 +90,14 @@ export const SettingsPage = () => {
         },
       }));
       useJournalStore.setState((s) => ({ events: [...data.journal, ...s.events] }));
-      alert('Import réussi.');
+      alert(t('settings.importSuccess'));
     } catch (e) {
-      alert(`Erreur d'import : ${(e as Error).message}`);
+      alert(t('settings.importError', { error: (e as Error).message }));
     }
   };
 
   const resetAll = () => {
-    if (
-      !confirm(
-        'Effacer toutes les données (parties, notes, paramètres, profil) ? Cette action est irréversible.',
-      )
-    )
-      return;
+    if (!confirm(t('settings.resetConfirm'))) return;
     storage.clearAll();
     location.reload();
   };
@@ -113,23 +112,25 @@ export const SettingsPage = () => {
           }}
           className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
         >
-          <ArrowLeft size={14} /> Retour
+          <ArrowLeft size={14} /> {t('settings.backToGames')}
         </button>
         <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-          Paramètres
+          {t('settings.title')}
         </h1>
       </div>
 
-      <Card title="Profil">
+      <Card title={t('settings.profile')}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-atreides-blue flex items-center justify-center border border-atreides-gold/40">
             <User size={18} className="text-atreides-gold" />
           </div>
           <div className="flex-1">
             <p className="text-sm text-atreides-silver">
-              {profile ? `${profile.housePrefix} ${profile.pseudo}` : 'Aucun profil'}
+              {profile ? `${profile.housePrefix} ${profile.pseudo}` : t('settings.profile.none')}
             </p>
-            <p className="text-[11px] text-atreides-silverMuted font-mono">Profil local</p>
+            <p className="text-[11px] text-atreides-silverMuted font-mono">
+              {t('settings.profile.local')}
+            </p>
           </div>
           <Button
             variant="ghost"
@@ -139,71 +140,91 @@ export const SettingsPage = () => {
               navigate('/');
             }}
           >
-            Changer
+            {t('settings.profile.change')}
           </Button>
         </div>
       </Card>
 
-      <Card title="Affichage">
+      <Card title={t('settings.display')}>
         <div className="space-y-3">
           <Toggle
             checked={fog}
             onChange={toggleFog}
-            label="Brouillard de guerre"
-            description="Masque les territoires sans présence ni contrôle connu."
+            label={t('settings.fog')}
+            description={t('settings.fog.desc')}
           />
           <Toggle
             checked={autosave}
             onChange={toggleAutosave}
-            label="Indicateur d'autosauvegarde"
-            description="Affiche une notification visuelle quand l'état est persisté."
+            label={t('settings.autosave')}
+            description={t('settings.autosave.desc')}
           />
           <Toggle
             checked={mobile}
             onChange={toggleMobile}
-            label="Mode rapide mobile"
-            description="Bottom nav et accès rapide depuis l'écran de partie."
+            label={t('settings.mobile')}
+            description={t('settings.mobile.desc')}
           />
           <div className="flex items-center gap-3 pt-2">
-            <span className="text-sm text-atreides-silver">Densité</span>
+            <span className="text-sm text-atreides-silver">{t('settings.density')}</span>
             <Button
               size="sm"
               variant={density === 'comfortable' ? 'gold' : 'ghost'}
               onClick={() => setDensity('comfortable')}
             >
-              Confortable
+              {t('settings.density.comfortable')}
             </Button>
             <Button
               size="sm"
               variant={density === 'compact' ? 'gold' : 'ghost'}
               onClick={() => setDensity('compact')}
             >
-              Compact
+              {t('settings.density.compact')}
             </Button>
           </div>
         </div>
       </Card>
 
-      <Card title="Règles du jeu" subtitle="S'applique aux nouvelles parties">
+      <Card title={t('settings.language')}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm text-atreides-silver">{t('settings.language.choose')}</span>
+          <Button
+            size="sm"
+            variant={language === 'en' ? 'gold' : 'ghost'}
+            onClick={() => setLanguage('en')}
+          >
+            {t('settings.language.en')}
+          </Button>
+          <Button
+            size="sm"
+            variant={language === 'fr' ? 'gold' : 'ghost'}
+            onClick={() => setLanguage('fr')}
+          >
+            {t('settings.language.fr')}
+          </Button>
+        </div>
+      </Card>
+
+      <Card title={t('settings.rules')} subtitle={t('settings.rules.subtitle')}>
         <Toggle
           checked={useValue10}
           onChange={toggleValue10}
-          label="Inclure les leaders valeur 10"
-          description="Active Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes et Edric dans le pool de leaders + traîtres. Désactivé par défaut (jeu standard)."
+          label={t('settings.includeValue10')}
+          description={t('settings.includeValue10.desc')}
         />
       </Card>
 
-      <Card title="Sauvegarde">
+      <Card title={t('settings.backup')}>
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" leftIcon={<Download size={14} />} onClick={exportAll}>
-            Exporter tout
+            {t('settings.export')}
           </Button>
           <Button
             variant="primary"
             leftIcon={<Upload size={14} />}
             onClick={() => fileRef.current?.click()}
           >
-            Importer un fichier
+            {t('settings.import')}
           </Button>
           <input
             ref={fileRef}
@@ -217,12 +238,11 @@ export const SettingsPage = () => {
             }}
           />
           <Button variant="danger" leftIcon={<RotateCcw size={14} />} onClick={resetAll}>
-            Tout réinitialiser
+            {t('settings.reset')}
           </Button>
         </div>
         <p className="text-[11px] text-atreides-silverMuted font-mono mt-3">
-          Les données restent stockées localement dans votre navigateur. Format d&apos;export JSON
-          version {EXPORT_VERSION}.
+          {t('settings.backupNote', { version: EXPORT_VERSION })}
         </p>
       </Card>
     </div>

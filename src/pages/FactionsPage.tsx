@@ -12,8 +12,10 @@ import { useAnalysis } from '@/hooks/useAnalysis';
 import type { FactionId } from '@/types/faction';
 import { cn } from '@/lib/cn';
 import { FactionIcon } from '@/components/icons/FactionIcon';
+import { useT } from '@/i18n';
 
 export const FactionsPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const byGame = useFactionStore((s) => s.byGame);
   const update = useFactionStore((s) => s.updateFaction);
@@ -34,14 +36,13 @@ export const FactionsPage = () => {
   return (
     <div className="px-4 lg:px-6 py-6">
       <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold mb-4">
-        Factions
+        {t('factions.title')}
       </h1>
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-4">
-        <Card title="Maisons en présence">
+        <Card title={t('factions.housesPresent')}>
           <ul className="space-y-1">
             {game.factionsInPlay.map((id) => {
-              const meta = FACTIONS[id];
               const isPlayer = id === playerFaction;
               const isActive = id === active;
               return (
@@ -57,9 +58,9 @@ export const FactionsPage = () => {
                   >
                     <FactionIcon faction={id} size={22} />
                     <span className="flex-1 text-sm font-serif" style={{ color: factionTextColor(id) }}>
-                      {meta.shortName}
+                      {t(`faction.${id}.short`)}
                     </span>
-                    {isPlayer && <Badge tone="gold">Vous</Badge>}
+                    {isPlayer && <Badge tone="gold">{t('factions.you')}</Badge>}
                   </button>
                 </li>
               );
@@ -71,7 +72,7 @@ export const FactionsPage = () => {
           <div className="space-y-4">
             <Card
               title={FACTIONS[f.id].name}
-              subtitle={FACTIONS[f.id].motto}
+              subtitle={t(`faction.${f.id}.motto`)}
               action={
                 analysis ? (
                   <div className="flex items-center gap-2">
@@ -84,13 +85,13 @@ export const FactionsPage = () => {
               }
             >
               <p className="text-xs text-atreides-silver italic mb-3">
-                {FACTIONS[f.id].specialAbility}
+                {t(`faction.${f.id}.ability`)}
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   type="number"
-                  label="Troupes estimées"
+                  label={t('factions.troopsEst')}
                   value={f.estimatedTroops}
                   onChange={(e) =>
                     update(game.id, f.id, { estimatedTroops: parseInt(e.target.value, 10) || 0 })
@@ -98,7 +99,7 @@ export const FactionsPage = () => {
                 />
                 <Input
                   type="number"
-                  label="Épice estimée"
+                  label={t('factions.spiceEst')}
                   value={f.estimatedSpice}
                   onChange={(e) =>
                     update(game.id, f.id, { estimatedSpice: parseInt(e.target.value, 10) || 0 })
@@ -108,14 +109,14 @@ export const FactionsPage = () => {
 
               <Textarea
                 className="mt-3"
-                label="Notes privées"
+                label={t('factions.privateNotes')}
                 value={f.privateNotes}
                 onChange={(e) => update(game.id, f.id, { privateNotes: e.target.value })}
                 rows={3}
               />
             </Card>
 
-            <Card title="Leaders">
+            <Card title={t('factions.leaders')}>
               <ul className="grid grid-cols-2 gap-2">
                 {f.leaders.map((l) => (
                   <li
@@ -144,7 +145,7 @@ export const FactionsPage = () => {
                       <div className="min-w-0">
                         <p className="text-sm text-atreides-silver truncate font-serif">{l.name}</p>
                         <p className="text-[10px] font-mono text-atreides-silverMuted">
-                          Valeur {l.value} · {l.alive ? 'vivant' : 'tombé'}
+                          {t('factions.leaderInfo', { value: l.value, status: l.alive ? t('factions.statusAlive') : t('factions.statusDead') })}
                         </p>
                       </div>
                     </div>
@@ -153,7 +154,7 @@ export const FactionsPage = () => {
                         l.alive ? killLeader(game.id, f.id, l.id) : reviveLeader(game.id, f.id, l.id)
                       }
                       className="text-atreides-silverMuted hover:text-atreides-gold"
-                      title={l.alive ? 'Marquer tombé' : 'Ressusciter'}
+                      title={l.alive ? t('factions.killTooltip') : t('factions.reviveTooltip')}
                     >
                       {l.alive ? <HeartCrack size={14} /> : <Heart size={14} />}
                     </button>
@@ -163,7 +164,7 @@ export const FactionsPage = () => {
             </Card>
 
             {f.id !== playerFaction && (
-              <Card title="Alliances">
+              <Card title={t('nav.alliances')}>
                 <ul className="space-y-1.5">
                   {game.factionsInPlay
                     .filter((other) => other !== f.id)
@@ -179,7 +180,7 @@ export const FactionsPage = () => {
                               className="w-2 h-2 rounded-full"
                               style={{ background: FACTIONS[other].color }}
                             />
-                            <span className="text-sm font-serif">{FACTIONS[other].shortName}</span>
+                            <span className="text-sm font-serif">{t(`faction.${other}.short`)}</span>
                           </div>
                           <Button
                             size="sm"
@@ -187,7 +188,7 @@ export const FactionsPage = () => {
                             leftIcon={allied ? <Link2 size={12} /> : <Unlink size={12} />}
                             onClick={() => setAlliance(game.id, f.id, other, !allied)}
                           >
-                            {allied ? 'Alliés' : 'Lier'}
+                            {allied ? t('factions.allied') : t('factions.link')}
                           </Button>
                         </li>
                       );

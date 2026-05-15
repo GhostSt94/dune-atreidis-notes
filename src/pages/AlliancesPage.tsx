@@ -37,8 +37,10 @@ import { FactionPill } from '@/components/ui/FactionPill';
 import { FactionIcon } from '@/components/icons/FactionIcon';
 import { AllianceWheel } from '@/components/widgets/AllianceWheel';
 import { cn } from '@/lib/cn';
+import { useT } from '@/i18n';
 
 export const AlliancesPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const byGame = useFactionStore((s) => s.byGame);
   const setAlliance = useFactionStore((s) => s.setAlliance);
@@ -100,10 +102,10 @@ export const AlliancesPage = () => {
         <Handshake className="text-atreides-gold" size={22} />
         <div>
           <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-            Alliances
+            {t('alliances.title')}
           </h1>
           <p className="text-xs text-atreides-silverMuted">
-            Une faction ne peut avoir qu&apos;une seule alliance à la fois · forger en brise toute autre automatiquement.
+            {t('alliances.subtitle')}
           </p>
         </div>
       </div>

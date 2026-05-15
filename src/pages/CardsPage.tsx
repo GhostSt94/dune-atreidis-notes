@@ -40,12 +40,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { FactionIcon } from '@/components/icons/FactionIcon';
 import { cn } from '@/lib/cn';
+import { useT } from '@/i18n';
 
-const TYPE_LABEL: Record<CardType, string> = {
-  weapon: 'Armes',
-  defense: 'Défenses',
-  special: 'Spéciales',
-  worthless: 'Sans valeur',
+const TYPE_KEY: Record<CardType, string> = {
+  weapon: 'cards.type.weapon',
+  defense: 'cards.type.defense',
+  special: 'cards.type.special',
+  worthless: 'cards.type.worthless',
 };
 
 const TYPE_TONE: Record<CardType, 'red' | 'blue' | 'gold' | 'neutral'> = {
@@ -61,6 +62,7 @@ type ViewMode = 'full' | 'cards';
 const TOTAL_TROOPS = 20;
 
 export const CardsPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const entries = useCardsStore((s) => s.entries);
   const addEntry = useCardsStore((s) => s.addEntry);
@@ -232,12 +234,12 @@ export const CardsPage = () => {
           aria-expanded={filtersOpen}
         >
           <span className="flex items-center gap-1.5">
-            <Filter size={12} className="text-atreides-gold" /> Filtres
+            <Filter size={12} className="text-atreides-gold" /> {t('tracker.filterMobile')}
             {(selectedFactions.size > 0 || viewMode === 'cards') && (
               <span className="ml-1 text-[10px] text-atreides-gold font-mono normal-case tracking-normal">
-                {selectedFactions.size > 0 && `${selectedFactions.size} faction(s)`}
+                {selectedFactions.size > 0 && t('tracker.factionsActive', { count: selectedFactions.size })}
                 {selectedFactions.size > 0 && viewMode === 'cards' && ' · '}
-                {viewMode === 'cards' && 'Cartes'}
+                {viewMode === 'cards' && t('tracker.modeCards')}
               </span>
             )}
           </span>
@@ -254,7 +256,7 @@ export const CardsPage = () => {
           )}
         >
         <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5 mr-1">
-          <Filter size={11} /> Filtrer
+          <Filter size={11} /> {t('tracker.filter')}
         </span>
         {game.factionsInPlay.map((id) => {
           const isActive = selectedFactions.has(id);
@@ -270,7 +272,7 @@ export const CardsPage = () => {
                   return next;
                 });
               }}
-              title={FACTIONS[id].shortName}
+              title={t(`faction.${id}.short`)}
               aria-pressed={isActive}
               className={cn(
                 'shrink-0 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all',
@@ -289,7 +291,7 @@ export const CardsPage = () => {
             onClick={() => setSelectedFactions(new Set())}
             className="sm:ml-auto text-[11px] font-display uppercase tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors flex items-center gap-1"
           >
-            <X size={11} /> Tout afficher
+            <X size={11} /> {t('tracker.showAll')}
           </button>
         )}
         <div
@@ -299,20 +301,20 @@ export const CardsPage = () => {
           )}
         >
           <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
-            <Eye size={11} /> Traqué
+            <Eye size={11} /> {t('tracker.tracked')}
           </span>
           <div className="flex items-center gap-0.5 rounded border border-atreides-gold/15 p-0.5">
             <ViewModeBtn
               active={viewMode === 'full'}
               onClick={() => setViewMode('full')}
               icon={<LayoutGrid size={11} />}
-              label="Tout"
+              label={t('tracker.viewAll')}
             />
             <ViewModeBtn
               active={viewMode === 'cards'}
               onClick={() => setViewMode('cards')}
               icon={<Layers size={11} />}
-              label="Cartes"
+              label={t('tracker.viewCards')}
             />
           </div>
         </div>
@@ -358,7 +360,7 @@ export const CardsPage = () => {
               title={
                 <span className="flex items-center gap-2">
                   <FactionIcon faction={id} size={20} />
-                  <span style={{ color: factionTextColor(id) }}>{meta.shortName}</span>
+                  <span style={{ color: factionTextColor(id) }}>{t(`faction.${id}.short`)}</span>
                 </span>
               }
               variant={id === game.playerFaction ? 'highlight' : 'default'}
@@ -373,7 +375,7 @@ export const CardsPage = () => {
                     {spice}
                   </span>
                   <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
-                    épice
+                    {t('tracker.spice')}
                   </span>
                 </span>
                 <div className="flex items-center gap-0.5 font-mono">
@@ -383,7 +385,7 @@ export const CardsPage = () => {
                   <SpiceBtn onClick={() => adjustSpice(5)} accent>+5</SpiceBtn>
                   <button
                     onClick={() => setSpice(meta.startingSpice)}
-                    title={`Reset à ${meta.startingSpice}`}
+                    title={t('tracker.resetSpice', { value: meta.startingSpice })}
                     className="ml-1 p-1 text-atreides-silverMuted hover:text-atreides-gold transition-colors"
                   >
                     <RotateCw size={11} />
@@ -399,7 +401,7 @@ export const CardsPage = () => {
                     {zones}
                   </span>
                   <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
-                    zones
+                    {t('tracker.zones')}
                   </span>
                 </span>
                 <div className="flex items-center gap-0.5 font-mono">
@@ -424,7 +426,7 @@ export const CardsPage = () => {
               <div className="mb-4 pt-1">
                 <div className="flex items-baseline justify-between mb-2">
                   <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                    Troupes
+                    {t('tracker.troops')}
                   </span>
                   <span
                     className={cn(
@@ -432,13 +434,13 @@ export const CardsPage = () => {
                       reserveOverflow ? 'text-severity-danger' : 'text-atreides-gold/70',
                     )}
                   >
-                    Réserve : {reserve} / {TOTAL_TROOPS}
+                    {t('tracker.troopsReserve', { count: reserve, total: TOTAL_TROOPS })}
                   </span>
                 </div>
                 <div className="space-y-2">
                   <TroopStepper
                     icon={<Skull size={12} />}
-                    label="Mort"
+                    label={t('tracker.troopsDead')}
                     value={dead}
                     onChange={(n) => {
                       const newDead = Math.max(0, n);
@@ -450,7 +452,7 @@ export const CardsPage = () => {
                   />
                   <TroopStepper
                     icon={<MapPin size={12} />}
-                    label="Sur carte"
+                    label={t('tracker.troopsOnMap')}
                     value={onMap}
                     onChange={(n) =>
                       updateFaction(game.id, id, {
@@ -466,7 +468,7 @@ export const CardsPage = () => {
                 <div className="mb-4">
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                      Leaders
+                      {t('tracker.leaders')}
                     </span>
                     <span
                       className={cn(
@@ -505,7 +507,7 @@ export const CardsPage = () => {
 
               {/* Cartes en main */}
               <SectionHeader
-                label="Cartes"
+                label={t('tracker.cards')}
                 count={`${factionEntries.length}`}
               />
               {factionEntries.length > 0 && (
@@ -526,26 +528,26 @@ export const CardsPage = () => {
                 onClick={() => setAddTarget({ factionId: id })}
                 className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-atreides-silverMuted hover:text-atreides-gold transition-colors font-display uppercase tracking-wider"
               >
-                <Plus size={12} /> Ajouter une carte
+                <Plus size={12} /> {t('tracker.addCard')}
               </button>
 
               {/* Traîtres */}
               {viewMode === 'full' && (
               <div className="mt-5">
                 <SectionHeader
-                  label="Traîtres"
+                  label={t('tracker.traitors')}
                   count={`${factionTraitors.length}/${MAX_TRAITORS_PER_FACTION}`}
                 />
                 {factionTraitors.length > 0 && (
                   <ul className="space-y-1 mb-2">
-                    {factionTraitors.map((t) => (
+                    {factionTraitors.map((tr) => (
                       <TraitorRow
-                        key={t.id}
-                        traitor={t}
-                        onAssign={() => setTraitorPickTarget(t)}
-                        onClearLeader={() => clearTraitorLeader(t.id)}
-                        onToggleActive={() => toggleTraitorActive(t.id)}
-                        onRemove={() => removeTraitorSlot(t.id)}
+                        key={tr.id}
+                        traitor={tr}
+                        onAssign={() => setTraitorPickTarget(tr)}
+                        onClearLeader={() => clearTraitorLeader(tr.id)}
+                        onToggleActive={() => toggleTraitorActive(tr.id)}
+                        onRemove={() => removeTraitorSlot(tr.id)}
                       />
                     ))}
                   </ul>
@@ -555,7 +557,7 @@ export const CardsPage = () => {
                   onClick={() => setAddingTraitorFor(id)}
                   className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-atreides-silverMuted hover:text-atreides-gold transition-colors font-display uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-atreides-silverMuted"
                 >
-                  <Plus size={12} /> Ajouter un traître
+                  <Plus size={12} /> {t('tracker.addTraitor')}
                 </button>
               </div>
               )}
@@ -569,15 +571,15 @@ export const CardsPage = () => {
         className="mt-4"
         title={
           <span className="flex items-center gap-2">
-            <Skull size={14} /> Cartes éliminées
+            <Skull size={14} /> {t('tracker.cardsEliminated')}
           </span>
         }
-        subtitle={`${eliminated.length} carte(s) hors-jeu`}
+        subtitle={t('tracker.cardsEliminatedSubtitle', { count: eliminated.length })}
       >
         {eliminated.length === 0 ? (
           <EmptyState
-            title="Pile vide"
-            description="Les cartes utilisées et défaussées apparaîtront ici."
+            title={t('tracker.emptyDiscard.title')}
+            description={t('tracker.emptyDiscard.desc')}
           />
         ) : (
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -602,7 +604,7 @@ export const CardsPage = () => {
           onClick={() => setAddTarget({ eliminated: true })}
           className="w-full mt-3 border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
         >
-          Ajouter une carte éliminée
+          {t('tracker.addEliminatedCard')}
         </Button>
       </UICard>
 
@@ -620,11 +622,11 @@ export const CardsPage = () => {
       <Modal
         open={!!revealEntry}
         onClose={() => setRevealEntry(null)}
-        title="Révéler la carte"
+        title={t('tracker.revealModal.title')}
         size="lg"
       >
         <p className="text-xs text-atreides-silverMuted mb-3">
-          Choisissez la carte exacte à associer à cette entrée.
+          {t('tracker.revealModal.desc')}
         </p>
         <CardCatalog
           groupedCards={groupedCards}
@@ -638,11 +640,11 @@ export const CardsPage = () => {
       <Modal
         open={!!traitorPickTarget}
         onClose={() => setTraitorPickTarget(null)}
-        title="Désigner un leader comme traître"
+        title={t('tracker.traitorModal.assignTitle')}
         size="lg"
       >
         <p className="text-xs text-atreides-silverMuted mb-3">
-          Choisissez le leader que cette faction trahirait en combat.
+          {t('tracker.traitorModal.assignDesc')}
         </p>
         <LeaderCatalog
           onSelect={pickLeaderForTraitor}
@@ -661,13 +663,13 @@ export const CardsPage = () => {
         onClose={() => setAddingTraitorFor(null)}
         title={
           addingTraitorFor
-            ? `Ajouter un traître pour ${FACTIONS[addingTraitorFor].shortName}`
+            ? t('tracker.traitorModal.addTitle', { faction: t(`faction.${addingTraitorFor}.short`) })
             : ''
         }
         size="lg"
       >
         <p className="text-xs text-atreides-silverMuted mb-3">
-          Choisissez un leader connu ou ajoutez un slot inconnu à révéler plus tard.
+          {t('tracker.traitorModal.addDesc')}
         </p>
         {addingTraitorFor && (
           <LeaderCatalog
@@ -750,11 +752,13 @@ interface LeaderAvatarProps {
   onToggle: () => void;
 }
 
-const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarProps) => (
+const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarProps) => {
+  const t = useT();
+  return (
   <button
     onClick={onToggle}
-    title={`${name} · valeur ${value}${alive ? '' : ' · tombé'}`}
-    aria-label={`${name} (${alive ? 'vivant' : 'tombé'}) — cliquer pour basculer`}
+    title={alive ? t('tracker.leaderAvatar.titleAlive', { name, value }) : t('tracker.leaderAvatar.titleDead', { name, value })}
+    aria-label={t('tracker.leaderAvatar.aria', { name, state: alive ? t('tracker.leaderAvatar.alive') : t('tracker.leaderAvatar.dead') })}
     className={cn(
       'relative shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 transition-all',
       alive
@@ -789,7 +793,8 @@ const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarPr
       </span>
     )}
   </button>
-);
+  );
+};
 
 interface TroopStepperProps {
   icon: React.ReactNode;
@@ -875,6 +880,7 @@ const CardEntryRow = ({
   onDelete,
   availableFactions,
 }: CardEntryRowProps) => {
+  const t = useT();
   const card = entry.cardId ? getCard(entry.cardId) : undefined;
   const [restoreOpen, setRestoreOpen] = useState(false);
 
@@ -900,17 +906,17 @@ const CardEntryRow = ({
             card ? 'text-atreides-silver font-serif' : 'text-atreides-silverMuted italic',
           )}
         >
-          {card ? card.name : 'Carte inconnue'}
+          {card ? card.name : t('tracker.cardRow.unknown')}
         </p>
         <p className="text-[10px] font-mono text-atreides-silverMuted">
-          Tour {entry.notedAtTurn}
+          {t('tracker.cardRow.atTurn', { turn: entry.notedAtTurn })}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {!entry.cardId && (
           <button
             onClick={onReveal}
-            title="Révéler"
+            title={t('tracker.cardRow.reveal')}
             className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
           >
             <Eye size={13} />
@@ -919,7 +925,7 @@ const CardEntryRow = ({
         {!isEliminated && onEliminate && (
           <button
             onClick={onEliminate}
-            title="Éliminer"
+            title={t('tracker.cardRow.eliminate')}
             className="p-1 text-atreides-silverMuted hover:text-severity-danger"
           >
             <Skull size={13} />
@@ -929,7 +935,7 @@ const CardEntryRow = ({
           <div className="relative">
             <button
               onClick={() => setRestoreOpen((o) => !o)}
-              title="Restaurer en main"
+              title={t('tracker.cardRow.restore')}
               className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
             >
               <RotateCcw size={13} />
@@ -946,14 +952,14 @@ const CardEntryRow = ({
                     className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-atreides-silver hover:bg-atreides-navy/40 text-left"
                   >
                     <FactionIcon faction={f} size={14} />
-                    {FACTIONS[f].shortName}
+                    {t(`faction.${f}.short`)}
                   </button>
                 ))}
                 <button
                   onClick={() => setRestoreOpen(false)}
                   className="flex items-center gap-2 w-full px-2 py-1 text-[10px] text-atreides-silverMuted hover:text-atreides-gold border-t border-atreides-gold/10"
                 >
-                  <X size={10} /> Annuler
+                  <X size={10} /> {t('common.cancel')}
                 </button>
               </div>
             )}
@@ -961,7 +967,7 @@ const CardEntryRow = ({
         )}
         <button
           onClick={onDelete}
-          title="Supprimer"
+          title={t('tracker.cardRow.delete')}
           className="p-1 text-atreides-silverMuted hover:text-severity-danger"
         >
           <Trash2 size={13} />
@@ -988,6 +994,7 @@ const TraitorRow = ({
   onToggleActive,
   onRemove,
 }: TraitorRowProps) => {
+  const t = useT();
   const isHarkonnen = traitor.factionId === 'harkonnen';
   const hasLeader = !!traitor.leaderName;
   const leaderSeed =
@@ -1010,10 +1017,10 @@ const TraitorRow = ({
         disabled={isHarkonnen}
         title={
           isHarkonnen
-            ? 'Tous les traîtres Harkonnen sont actifs'
+            ? t('tracker.traitorRow.harkAllActive')
             : traitor.active
-              ? 'Désactiver'
-              : 'Activer'
+              ? t('tracker.traitorRow.deactivate')
+              : t('tracker.traitorRow.activate')
         }
         className={cn(
           'shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors',
@@ -1047,16 +1054,16 @@ const TraitorRow = ({
             hasLeader ? 'text-atreides-silver font-serif' : 'text-atreides-silverMuted italic',
           )}
         >
-          {traitor.leaderName ?? 'Leader inconnu'}
+          {traitor.leaderName ?? t('tracker.traitorRow.unknownLeader')}
         </p>
         {traitor.leaderFactionId && (
           <p
             className="text-[10px] font-mono flex items-center gap-1"
             style={{ color: factionTextColor(traitor.leaderFactionId) }}
           >
-            {FACTIONS[traitor.leaderFactionId].shortName}
+            {t(`faction.${traitor.leaderFactionId}.short`)}
             {leaderSeed && (
-              <span className="text-atreides-gold/80">· val {leaderSeed.value}</span>
+              <span className="text-atreides-gold/80">· {t('tracker.traitorRow.valShort', { value: leaderSeed.value })}</span>
             )}
           </p>
         )}
@@ -1066,7 +1073,7 @@ const TraitorRow = ({
         {hasLeader ? (
           <button
             onClick={onClearLeader}
-            title="Effacer le leader"
+            title={t('tracker.traitorRow.clear')}
             className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
           >
             <X size={12} />
@@ -1074,7 +1081,7 @@ const TraitorRow = ({
         ) : (
           <button
             onClick={onAssign}
-            title="Désigner un leader"
+            title={t('tracker.traitorRow.assign')}
             className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
           >
             <Eye size={12} />
@@ -1082,7 +1089,7 @@ const TraitorRow = ({
         )}
         <button
           onClick={onRemove}
-          title="Supprimer le slot"
+          title={t('tracker.traitorRow.delete')}
           className="p-1 text-atreides-silverMuted hover:text-severity-danger"
         >
           <Trash2 size={12} />
@@ -1107,6 +1114,7 @@ const LeaderCatalog = ({
   usedLeaderKeys,
   allowedCurrentKey,
 }: LeaderCatalogProps) => {
+  const t = useT();
   const [search, setSearch] = useState('');
   const includeValue10 = useSettingsStore((s) => s.useValue10Leaders);
   const isUsed = (id: FactionId, name: string) => {
@@ -1118,7 +1126,7 @@ const LeaderCatalog = ({
   return (
     <>
       <Input
-        placeholder="Rechercher un leader..."
+        placeholder={t('tracker.traitorModal.searchPlaceholder')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-3"
@@ -1134,10 +1142,10 @@ const LeaderCatalog = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-display uppercase tracking-wider text-atreides-gold">
-                Leader inconnu
+                {t('tracker.traitorModal.unknownLeader')}
               </p>
               <p className="text-[11px] text-atreides-silverMuted mt-0.5">
-                Ajoute un slot vide à révéler plus tard.
+                {t('tracker.traitorModal.unknownLeaderDesc')}
               </p>
             </div>
           </button>
@@ -1158,7 +1166,7 @@ const LeaderCatalog = ({
                   className="text-sm font-serif"
                   style={{ color: factionTextColor(id) }}
                 >
-                  {FACTIONS[id].shortName}
+                  {t(`faction.${id}.short`)}
                 </span>
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -1183,7 +1191,7 @@ const LeaderCatalog = ({
                           {l.name}
                         </p>
                         <p className="text-[10px] font-mono text-atreides-silverMuted">
-                          Valeur {l.value}
+                          {t('tracker.traitorModal.leaderValue', { value: l.value })}
                         </p>
                       </div>
                       <Badge tone="gold">{l.value}</Badge>
@@ -1218,14 +1226,15 @@ const AddCardModal = ({
   groupedCards,
   usedCardIds,
 }: AddCardModalProps) => {
+  const t = useT();
   const [mode, setMode] = useState<'unknown' | 'known'>('unknown');
   const [search, setSearch] = useState('');
 
   if (!target) return null;
   const title =
     'eliminated' in target
-      ? 'Ajouter une carte éliminée'
-      : `Ajouter une carte à ${FACTIONS[target.factionId].shortName}`;
+      ? t('tracker.addCardModal.eliminatedTitle')
+      : t('tracker.addCardModal.factionTitle', { faction: t(`faction.${target.factionId}.short`) });
 
   return (
     <Modal open={!!target} onClose={onClose} title={title} size="lg">
@@ -1239,7 +1248,7 @@ const AddCardModal = ({
               : 'text-atreides-silverMuted border-transparent hover:text-atreides-silver',
           )}
         >
-          <HelpCircle size={12} className="inline mr-1.5" /> Carte inconnue
+          <HelpCircle size={12} className="inline mr-1.5" /> {t('tracker.addCardModal.unknownTab')}
         </button>
         <button
           onClick={() => setMode('known')}
@@ -1250,26 +1259,25 @@ const AddCardModal = ({
               : 'text-atreides-silverMuted border-transparent hover:text-atreides-silver',
           )}
         >
-          Choisir une carte
+          {t('tracker.addCardModal.chooseTab')}
         </button>
       </div>
 
       {mode === 'unknown' ? (
         <div className="text-center py-6">
           <HelpCircle size={42} className="mx-auto text-atreides-gold/70 mb-3" />
-          <p className="text-sm text-atreides-silver mb-1">Carte inconnue</p>
+          <p className="text-sm text-atreides-silver mb-1">{t('tracker.addCardModal.unknownTitle')}</p>
           <p className="text-xs text-atreides-silverMuted max-w-sm mx-auto mb-5">
-            Cette maison détient une carte, mais vous ne savez pas laquelle. Vous pourrez
-            la révéler plus tard.
+            {t('tracker.addCardModal.unknownDesc')}
           </p>
           <Button variant="gold" onClick={onAddUnknown}>
-            Confirmer l&apos;ajout
+            {t('tracker.addCardModal.confirmAdd')}
           </Button>
         </div>
       ) : (
         <>
           <Input
-            placeholder="Rechercher une carte..."
+            placeholder={t('tracker.addCardModal.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="mb-3"
@@ -1303,6 +1311,7 @@ const CardCatalog = ({
   usedCardIds,
   allowedCurrent,
 }: CardCatalogProps) => {
+  const t = useT();
   const filter = (cards: TreacheryCard[]) =>
     cards.filter((c) => {
       if (usedCardIds && c.id !== allowedCurrent && usedCardIds.has(c.id)) return false;
@@ -1318,7 +1327,7 @@ const CardCatalog = ({
         return (
           <section key={type}>
             <div className="flex items-center gap-2 mb-2">
-              <Badge tone={TYPE_TONE[type]}>{TYPE_LABEL[type]}</Badge>
+              <Badge tone={TYPE_TONE[type]}>{t(TYPE_KEY[type])}</Badge>
               <span className="text-[10px] font-mono text-atreides-silverMuted">
                 {cards.length}
               </span>

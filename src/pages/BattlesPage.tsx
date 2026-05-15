@@ -32,8 +32,10 @@ import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { FactionIcon } from '@/components/icons/FactionIcon';
 import { cn } from '@/lib/cn';
+import { useT } from '@/i18n';
 
 export const BattlesPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const factionsByGame = useFactionStore((s) => s.byGame);
   const mapByGame = useMapStore((s) => s.byGame);
@@ -84,7 +86,7 @@ export const BattlesPage = () => {
   return (
     <div className="px-4 lg:px-6 py-6 space-y-4">
       <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold mb-2">
-        Batailles
+        {t('nav.battles')}
       </h1>
 
       {/* ─── Simulateur de bataille ─── */}

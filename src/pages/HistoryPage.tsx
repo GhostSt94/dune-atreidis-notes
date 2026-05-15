@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/Badge';
 import { FactionPill } from '@/components/ui/FactionPill';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatDate } from '@/lib/date';
-import { FACTIONS, factionTextColor } from '@/data/factions';
+import { factionTextColor } from '@/data/factions';
+import { useT } from '@/i18n';
 
 export const HistoryPage = () => {
+  const t = useT();
   const games = useGameStore((s) => s.games);
   const finished = Object.values(games)
     .filter((g) => g.status === 'finished')
@@ -20,25 +22,24 @@ export const HistoryPage = () => {
         to="/games"
         className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
       >
-        <ArrowLeft size={14} /> Retour aux parties
+        <ArrowLeft size={14} /> {t('history.back')}
       </Link>
       <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold mb-4">
-        Historique
+        {t('history.title')}
       </h1>
 
       {finished.length === 0 ? (
         <Card>
-          <EmptyState title="Aucune partie terminée" />
+          <EmptyState title={t('history.empty.title')} description={t('history.empty.desc')} />
         </Card>
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {finished.map((g) => (
-            <Card key={g.id} title={g.name} subtitle={`Terminée ${formatDate(g.updatedAt)}`}>
+            <Card key={g.id} title={g.name} subtitle={formatDate(g.updatedAt)}>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone="gold">Tour final {g.currentTurn}</Badge>
+                <Badge tone="gold">{t('topbar.turn')} {g.currentTurn}</Badge>
                 {g.winner && (
                   <>
-                    <span className="text-xs text-atreides-silverMuted">Vainqueur</span>
                     <FactionPill id={g.winner} />
                   </>
                 )}
@@ -50,7 +51,7 @@ export const HistoryPage = () => {
                     className="text-[10px] font-mono"
                     style={{ color: factionTextColor(f) }}
                   >
-                    {FACTIONS[f].shortName}
+                    {t(`faction.${f}.short`)}
                   </span>
                 ))}
               </div>

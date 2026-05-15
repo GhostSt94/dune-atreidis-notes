@@ -13,8 +13,10 @@ import { FactionComparisonTable } from '@/components/widgets/FactionComparisonTa
 import { AlertsPanel } from '@/components/widgets/AlertsPanel';
 import { QuickNote } from '@/components/widgets/QuickNote';
 import { AlliancesPanel } from '@/components/widgets/AlliancesPanel';
+import { useT } from '@/i18n';
 
 export const AnalysisPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const analysis = useAnalysis();
   if (!game) return <Navigate to="/games" replace />;
@@ -26,10 +28,10 @@ export const AnalysisPage = () => {
         <Brain className="text-atreides-gold" size={22} />
         <div>
           <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-            Stratégie
+            {t('analysis.title')}
           </h1>
           <p className="text-xs text-atreides-silverMuted">
-            État de la partie et analyse heuristique Mentat.
+            {t('analysis.subtitle')}
           </p>
         </div>
       </div>

@@ -14,8 +14,10 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/cn';
 import { FactionIcon } from '@/components/icons/FactionIcon';
+import { useT } from '@/i18n';
 
 export const MapPage = () => {
+  const t = useT();
   const game = useCurrentGame();
   const fog = useSettingsStore((s) => s.fogOfWar);
   const toggleFog = useSettingsStore((s) => s.toggleFog);
@@ -37,12 +39,12 @@ export const MapPage = () => {
     <div className="px-4 lg:px-6 py-6">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
         <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
-          Carte d&apos;Arrakis
+          {t('map.title')}
         </h1>
         <div className="flex flex-wrap items-center gap-4">
-          <Toggle checked={showLabels} onChange={setShowLabels} label="Étiquettes" />
-          <Toggle checked={fog} onChange={toggleFog} label="Brouillard de guerre" />
-          <Toggle checked={debug} onChange={setDebug} label="Debug coords" />
+          <Toggle checked={showLabels} onChange={setShowLabels} label={t('map.subtitle')} />
+          <Toggle checked={fog} onChange={toggleFog} label={t('settings.fog')} />
+          <Toggle checked={debug} onChange={setDebug} label={t('map.debug')} />
         </div>
       </div>
 
