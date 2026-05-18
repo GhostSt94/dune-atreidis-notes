@@ -135,10 +135,7 @@ export const SettingsPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              clearProfile();
-              navigate('/');
-            }}
+            onClick={() => clearProfile()}
           >
             {t('settings.profile.change')}
           </Button>

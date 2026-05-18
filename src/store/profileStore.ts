@@ -10,15 +10,22 @@ interface ProfileStore {
   clearProfile: () => void;
 }
 
+const defaultProfile = (): Profile => ({
+  id: newId(),
+  pseudo: "Muad'Dib",
+  housePrefix: 'Duke',
+  createdAt: now(),
+});
+
 export const useProfileStore = create<ProfileStore>()(
   persist(
     (set) => ({
-      profile: null,
+      profile: defaultProfile(),
       setProfile: (pseudo, housePrefix) =>
         set({
           profile: { id: newId(), pseudo, housePrefix, createdAt: now() },
         }),
-      clearProfile: () => set({ profile: null }),
+      clearProfile: () => set({ profile: defaultProfile() }),
     }),
     { name: 'dune.profile' },
   ),

@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
-import { LoginPage } from '@/pages/LoginPage';
 import { GamesListPage } from '@/pages/GamesListPage';
 import { NewGamePage } from '@/pages/NewGamePage';
 import { FactionsPage } from '@/pages/FactionsPage';
@@ -13,46 +12,24 @@ import { AlliancesPage } from '@/pages/AlliancesPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PredictionsPage } from '@/pages/PredictionsPage';
-import { useProfileStore } from '@/store';
-
-const RequireProfile = ({ children }: { children: JSX.Element }) => {
-  const profile = useProfileStore((s) => s.profile);
-  if (!profile) return <Navigate to="/" replace />;
-  return children;
-};
-
 export const AppRouter = () => (
   <Routes>
-    <Route path="/" element={<LoginPage />} />
+    <Route path="/" element={<Navigate to="/games" replace />} />
     <Route element={<AppShell />}>
-      <Route
-        path="/games"
-        element={
-          <RequireProfile>
-            <GamesListPage />
-          </RequireProfile>
-        }
-      />
-      <Route
-        path="/games/new"
-        element={
-          <RequireProfile>
-            <NewGamePage />
-          </RequireProfile>
-        }
-      />
-      <Route path="/game" element={<RequireProfile><CardsPage /></RequireProfile>} />
-      <Route path="/game/factions" element={<RequireProfile><FactionsPage /></RequireProfile>} />
-      <Route path="/game/notes" element={<RequireProfile><NotesPage /></RequireProfile>} />
+      <Route path="/games" element={<GamesListPage />} />
+      <Route path="/games/new" element={<NewGamePage />} />
+      <Route path="/game" element={<CardsPage />} />
+      <Route path="/game/factions" element={<FactionsPage />} />
+      <Route path="/game/notes" element={<NotesPage />} />
       <Route path="/game/cards" element={<Navigate to="/game" replace />} />
-      <Route path="/game/battles" element={<RequireProfile><BattlesPage /></RequireProfile>} />
-      <Route path="/game/map" element={<RequireProfile><MapPage /></RequireProfile>} />
-      <Route path="/game/alliances" element={<RequireProfile><AlliancesPage /></RequireProfile>} />
-      <Route path="/game/analysis" element={<RequireProfile><AnalysisPage /></RequireProfile>} />
-      <Route path="/game/predictions" element={<RequireProfile><PredictionsPage /></RequireProfile>} />
-      <Route path="/history" element={<RequireProfile><HistoryPage /></RequireProfile>} />
-      <Route path="/settings" element={<RequireProfile><SettingsPage /></RequireProfile>} />
+      <Route path="/game/battles" element={<BattlesPage />} />
+      <Route path="/game/map" element={<MapPage />} />
+      <Route path="/game/alliances" element={<AlliancesPage />} />
+      <Route path="/game/analysis" element={<AnalysisPage />} />
+      <Route path="/game/predictions" element={<PredictionsPage />} />
+      <Route path="/history" element={<HistoryPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
     </Route>
-    <Route path="*" element={<Navigate to="/" replace />} />
+    <Route path="*" element={<Navigate to="/games" replace />} />
   </Routes>
 );
