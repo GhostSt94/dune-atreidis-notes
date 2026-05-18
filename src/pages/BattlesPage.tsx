@@ -218,6 +218,7 @@ const BattleSimulator = ({
 // ──────────────────────────────────────────────────────────
 
 const AnalysisDisplay = ({ analysis }: { analysis: BattleAnalysis }) => {
+  const t = useT();
   const winPct = Math.round(analysis.victoryProbability * 100);
   const winColor =
     winPct >= 70
@@ -434,9 +435,9 @@ const AnalysisDisplay = ({ analysis }: { analysis: BattleAnalysis }) => {
           </p>
           <ul className="space-y-1">
             {analysis.dangerousCards.map((c) => (
-              <li key={c.name} className="text-xs flex items-baseline gap-2">
+              <li key={c.nameKey} className="text-xs flex items-baseline gap-2">
                 <Badge tone="red">{c.type}</Badge>
-                <span className="text-atreides-silver font-serif">{c.name}</span>
+                <span className="text-atreides-silver font-serif">{t(c.nameKey)}</span>
                 <span className="text-[10px] text-atreides-silverMuted">{c.reason}</span>
               </li>
             ))}

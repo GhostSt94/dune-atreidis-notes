@@ -1,13 +1,19 @@
 import type { FactionId } from './faction';
 
 export type CardType = 'weapon' | 'defense' | 'special' | 'worthless';
+export type WeaponSubtype = 'projectile' | 'poison';
 export type CardKnowledge = 'known' | 'eliminated';
 
 export interface TreacheryCard {
   id: string;
-  name: string;
+  /** Card slug shared across copies (e.g. shield_1..shield_5 share slug "shield"). */
+  slug: string;
   type: CardType;
-  description: string;
+  subtype?: WeaponSubtype;
+  /** Slug of the card that counters this one (e.g. "shield", "snooper"). */
+  counteredBy?: string;
+  /** Approximate combat-impact heuristic, 0..1. */
+  battleImpact: number;
 }
 
 export interface CardTrackerEntry {

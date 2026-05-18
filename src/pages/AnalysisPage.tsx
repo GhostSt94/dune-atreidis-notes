@@ -205,7 +205,7 @@ export const AnalysisPage = () => {
                   <ul className="mt-2 space-y-0.5">
                     {h.topKnownCards.map((c) => (
                       <li key={c.cardId} className="text-[11px] text-atreides-silver">
-                        • {c.name}
+                        • {c.nameKey ? t(c.nameKey) : '?'}
                       </li>
                     ))}
                   </ul>

@@ -6,7 +6,7 @@ export interface HandEstimate {
   factionId: FactionId;
   knownCount: number;
   unknownCount: number;
-  topKnownCards: { cardId: string; name: string; type: string }[];
+  topKnownCards: { cardId: string; nameKey: string; type: string }[];
 }
 
 export const estimateHand = (faction: FactionId, entries: CardTrackerEntry[]): HandEstimate => {
@@ -18,7 +18,7 @@ export const estimateHand = (faction: FactionId, entries: CardTrackerEntry[]): H
     const card = TREACHERY_CARDS.find((c) => c.id === k.cardId);
     return {
       cardId: k.cardId ?? '',
-      name: card?.name ?? k.cardId ?? '?',
+      nameKey: card ? `card.${card.slug}.name` : '',
       type: card?.type ?? 'unknown',
     };
   });

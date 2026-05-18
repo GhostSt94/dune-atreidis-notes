@@ -26,7 +26,7 @@ import {
   useSettingsStore,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
-import { TREACHERY_CARDS, getCard } from '@/data/cards';
+import { TREACHERY_CARDS, getCard, cardNameKey, cardDescKey } from '@/data/cards';
 import { FACTIONS, FACTION_IDS, factionTextColor } from '@/data/factions';
 import { LEADER_SEED, findLeaderSeed } from '@/data/leaders';
 import type { CardType, TreacheryCard, CardTrackerEntry } from '@/types/card';
@@ -906,7 +906,7 @@ const CardEntryRow = ({
             card ? 'text-atreides-silver font-serif' : 'text-atreides-silverMuted italic',
           )}
         >
-          {card ? card.name : t('tracker.cardRow.unknown')}
+          {card ? t(cardNameKey(card)) : t('tracker.cardRow.unknown')}
         </p>
         <p className="text-[10px] font-mono text-atreides-silverMuted">
           {t('tracker.cardRow.atTurn', { turn: entry.notedAtTurn })}
@@ -1227,7 +1227,6 @@ const AddCardModal = ({
   usedCardIds,
 }: AddCardModalProps) => {
   const t = useT();
-  const [mode, setMode] = useState<'unknown' | 'known'>('unknown');
   const [search, setSearch] = useState('');
 
   if (!target) return null;
@@ -1238,58 +1237,19 @@ const AddCardModal = ({
 
   return (
     <Modal open={!!target} onClose={onClose} title={title} size="lg">
-      <div className="flex gap-1 border-b border-atreides-gold/15 mb-4">
-        <button
-          onClick={() => setMode('unknown')}
-          className={cn(
-            'px-4 py-2 text-xs font-display uppercase tracking-wider transition-colors border-b-2 -mb-px',
-            mode === 'unknown'
-              ? 'text-atreides-gold border-atreides-gold'
-              : 'text-atreides-silverMuted border-transparent hover:text-atreides-silver',
-          )}
-        >
-          <HelpCircle size={12} className="inline mr-1.5" /> {t('tracker.addCardModal.unknownTab')}
-        </button>
-        <button
-          onClick={() => setMode('known')}
-          className={cn(
-            'px-4 py-2 text-xs font-display uppercase tracking-wider transition-colors border-b-2 -mb-px',
-            mode === 'known'
-              ? 'text-atreides-gold border-atreides-gold'
-              : 'text-atreides-silverMuted border-transparent hover:text-atreides-silver',
-          )}
-        >
-          {t('tracker.addCardModal.chooseTab')}
-        </button>
-      </div>
-
-      {mode === 'unknown' ? (
-        <div className="text-center py-6">
-          <HelpCircle size={42} className="mx-auto text-atreides-gold/70 mb-3" />
-          <p className="text-sm text-atreides-silver mb-1">{t('tracker.addCardModal.unknownTitle')}</p>
-          <p className="text-xs text-atreides-silverMuted max-w-sm mx-auto mb-5">
-            {t('tracker.addCardModal.unknownDesc')}
-          </p>
-          <Button variant="gold" onClick={onAddUnknown}>
-            {t('tracker.addCardModal.confirmAdd')}
-          </Button>
-        </div>
-      ) : (
-        <>
-          <Input
-            placeholder={t('tracker.addCardModal.searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="mb-3"
-          />
-          <CardCatalog
-            groupedCards={groupedCards}
-            search={search}
-            onSelect={(cardId) => onAddKnown(cardId)}
-            usedCardIds={usedCardIds}
-          />
-        </>
-      )}
+      <Input
+        placeholder={t('tracker.addCardModal.searchPlaceholder')}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-3"
+      />
+      <CardCatalog
+        groupedCards={groupedCards}
+        search={search}
+        onSelect={(cardId) => onAddKnown(cardId)}
+        onSelectUnknown={onAddUnknown}
+        usedCardIds={usedCardIds}
+      />
     </Modal>
   );
 };
@@ -1300,49 +1260,104 @@ interface CardCatalogProps {
   groupedCards: Record<CardType, TreacheryCard[]>;
   search?: string;
   onSelect: (cardId: string) => void;
+  onSelectUnknown?: () => void;
   usedCardIds?: Set<string>;
   allowedCurrent?: string;
+}
+
+interface SlotGroup {
+  sample: TreacheryCard;
+  availableIds: string[];
 }
 
 const CardCatalog = ({
   groupedCards,
   search = '',
   onSelect,
+  onSelectUnknown,
   usedCardIds,
   allowedCurrent,
 }: CardCatalogProps) => {
   const t = useT();
-  const filter = (cards: TreacheryCard[]) =>
-    cards.filter((c) => {
-      if (usedCardIds && c.id !== allowedCurrent && usedCardIds.has(c.id)) return false;
-      if (search.trim() && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
+
+  const groupBySlug = (cards: TreacheryCard[]): SlotGroup[] => {
+    const map = new Map<string, SlotGroup>();
+    for (const c of cards) {
+      const isUsed = usedCardIds && c.id !== allowedCurrent && usedCardIds.has(c.id);
+      if (isUsed) continue;
+      if (search.trim() && !t(cardNameKey(c)).toLowerCase().includes(search.toLowerCase())) continue;
+      const existing = map.get(c.slug);
+      if (existing) existing.availableIds.push(c.id);
+      else map.set(c.slug, { sample: c, availableIds: [c.id] });
+    }
+    return [...map.values()];
+  };
+
+  const showUnknown = !!onSelectUnknown && !search.trim();
+  const typeGroups = (Object.keys(groupedCards) as CardType[]).map((type) => ({
+    type,
+    groups: groupBySlug(groupedCards[type]),
+  }));
+  const noResults = !showUnknown && typeGroups.every((tg) => tg.groups.length === 0);
 
   return (
-    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-      {(Object.keys(groupedCards) as CardType[]).map((type) => {
-        const cards = filter(groupedCards[type]);
-        if (cards.length === 0) return null;
+    <div className="h-[60vh] overflow-y-auto pr-1 space-y-4">
+      {showUnknown && (
+        <button
+          onClick={onSelectUnknown}
+          className="w-full text-left p-3 rounded border border-dashed border-atreides-gold/40 bg-atreides-deep/40 hover:border-atreides-gold/70 hover:bg-atreides-navy/40 transition-colors flex items-center gap-3"
+        >
+          <div className="shrink-0 w-10 h-10 rounded-full border-2 border-dashed border-atreides-gold/40 flex items-center justify-center">
+            <HelpCircle size={18} className="text-atreides-gold/80" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-display uppercase tracking-wider text-atreides-gold">
+              {t('tracker.addCardModal.unknownTitle')}
+            </p>
+            <p className="text-[11px] text-atreides-silverMuted mt-0.5">
+              {t('tracker.addCardModal.unknownDesc')}
+            </p>
+          </div>
+        </button>
+      )}
+      {noResults && (
+        <div className="flex flex-col items-center justify-center h-full text-center py-10">
+          <HelpCircle size={32} className="text-atreides-silverMuted/60 mb-2" />
+          <p className="text-sm text-atreides-silverMuted">
+            {t('tracker.addCardModal.noResults')}
+          </p>
+        </div>
+      )}
+      {typeGroups.map(({ type, groups }) => {
+        if (groups.length === 0) return null;
         return (
           <section key={type}>
             <div className="flex items-center gap-2 mb-2">
               <Badge tone={TYPE_TONE[type]}>{t(TYPE_KEY[type])}</Badge>
               <span className="text-[10px] font-mono text-atreides-silverMuted">
-                {cards.length}
+                {groups.length}
               </span>
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {cards.map((c) => (
-                <li key={c.id}>
+              {groups.map((g) => (
+                <li key={g.sample.slug}>
                   <button
-                    onClick={() => onSelect(c.id)}
-                    className="w-full text-left p-2 rounded border border-atreides-gold/15 bg-atreides-deep/40 hover:border-atreides-gold/50 hover:bg-atreides-navy/40 transition-colors"
+                    onClick={() => onSelect(g.availableIds[0])}
+                    className="w-full text-left p-2 rounded border border-atreides-gold/15 bg-atreides-deep/40 hover:border-atreides-gold/50 hover:bg-atreides-navy/40 transition-colors flex items-start gap-2"
                   >
-                    <p className="text-sm font-serif text-atreides-silver">{c.name}</p>
-                    <p className="text-[10px] text-atreides-silverMuted mt-0.5 line-clamp-2">
-                      {c.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-serif text-atreides-silver">
+                        {t(cardNameKey(g.sample))}
+                      </p>
+                      <p className="text-[10px] text-atreides-silverMuted mt-0.5 line-clamp-2">
+                        {t(cardDescKey(g.sample))}
+                      </p>
+                    </div>
+                    {g.availableIds.length > 1 && (
+                      <span className="shrink-0 text-[11px] font-mono font-display text-atreides-gold border border-atreides-gold/40 rounded px-1.5 py-0.5 self-center">
+                        ×{g.availableIds.length}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}

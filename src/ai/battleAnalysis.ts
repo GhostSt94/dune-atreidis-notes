@@ -5,7 +5,7 @@ import type { CardTrackerEntry } from '@/types/card';
 import type { Traitor } from '@/types/traitor';
 import { TERRITORIES } from '@/data/territories';
 import { FACTIONS } from '@/data/factions';
-import { TREACHERY_CARDS } from '@/data/cards';
+import { TREACHERY_CARDS, isPoison, isProjectile } from '@/data/cards';
 import {
   findSimilarBattles,
   knnVictoryProbability,
@@ -71,7 +71,7 @@ export interface BattleAnalysis {
   // Recommandations
   recommendedLeader: LeaderRecommendation | null;
   recommendedDial: { dial: number; rationale: string };
-  dangerousCards: { name: string; type: string; reason: string }[];
+  dangerousCards: { nameKey: string; type: string; reason: string }[];
 
   // Synthèse
   verdict: string;
@@ -131,22 +131,6 @@ const cardsHeldBy = (
 ): CardTrackerEntry[] =>
   cards.filter((c) => c.knowledge === 'known' && c.heldBy === factionId);
 
-const POISON_CARD_IDS = new Set([
-  'chaumas',
-  'chaumurky',
-  'ellaca_drug',
-  'gom_jabbar',
-]);
-const PROJECTILE_CARD_IDS = new Set([
-  'crysknife',
-  'maula_pistol',
-  'slip_tip',
-  'stunner',
-  'hunter_seeker',
-]);
-
-const isPoison = (cardId: string): boolean => POISON_CARD_IDS.has(cardId);
-const isProjectile = (cardId: string): boolean => PROJECTILE_CARD_IDS.has(cardId);
 
 // ──────────────────────────────────────────────────────────
 // Fonction principale
@@ -333,10 +317,14 @@ export const computeBattleAnalysis = (
   };
 
   // ─── 4. Risque poison/projectile ───
-  const enemyPoison = enemyWeapons.filter((c) => c.cardId && isPoison(c.cardId));
-  const enemyProjectile = enemyWeapons.filter(
-    (c) => c.cardId && isProjectile(c.cardId),
-  );
+  const enemyPoison = enemyWeapons.filter((c) => {
+    const card = c.cardId ? TREACHERY_CARDS.find((tc) => tc.id === c.cardId) : undefined;
+    return card ? isPoison(card) : false;
+  });
+  const enemyProjectile = enemyWeapons.filter((c) => {
+    const card = c.cardId ? TREACHERY_CARDS.find((tc) => tc.id === c.cardId) : undefined;
+    return card ? isProjectile(card) : false;
+  });
   const ppScore = clamp(enemyPoison.length * 40 + enemyProjectile.length * 30);
   const poisonProjectileRisk: Metric = {
     score: ppScore,
@@ -587,14 +575,14 @@ export const computeBattleAnalysis = (
   };
 
   // ─── Cartes dangereuses probables ───
-  const dangerousCards: { name: string; type: string; reason: string }[] = [];
+  const dangerousCards: { nameKey: string; type: string; reason: string }[] = [];
   for (const entry of enemyWeapons) {
     const card = TREACHERY_CARDS.find((c) => c.id === entry.cardId);
     if (!card) continue;
     let reason = `${card.type} en main connue`;
-    if (isPoison(card.id)) reason = 'Poison — annulé par Snooper';
-    else if (isProjectile(card.id)) reason = 'Projectile — annulé par Shield';
-    dangerousCards.push({ name: card.name, type: card.type, reason });
+    if (isPoison(card)) reason = 'Poison — annulé par Snooper';
+    else if (isProjectile(card)) reason = 'Projectile — annulé par Shield';
+    dangerousCards.push({ nameKey: `card.${card.slug}.name`, type: card.type, reason });
     if (dangerousCards.length >= 3) break;
   }
 
