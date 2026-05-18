@@ -44,6 +44,7 @@
   "tracker.showAll": "Tout afficher",
   "tracker.factionsActive": "{count} faction(s)",
   "tracker.modeCards": "Cartes",
+  "tracker.sectionsHidden": "{count} section(s) masquée(s)",
   "tracker.spice": "épice",
   "tracker.zones": "zones",
   "tracker.troops": "Troupes",

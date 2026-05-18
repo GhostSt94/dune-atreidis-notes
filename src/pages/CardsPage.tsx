@@ -14,9 +14,12 @@ import {
   Castle,
   MapPin,
   Filter,
-  LayoutGrid,
   Layers,
   ChevronDown,
+  Crown,
+  UserX,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   useCardsStore,
@@ -57,7 +60,27 @@ const TYPE_TONE: Record<CardType, 'red' | 'blue' | 'gold' | 'neutral'> = {
 };
 
 type AddTarget = { factionId: FactionId } | { eliminated: true };
-type ViewMode = 'full' | 'cards';
+type Section = 'spice' | 'zones' | 'troops' | 'leaders' | 'cards' | 'traitors';
+
+const SECTION_ORDER: Section[] = ['spice', 'zones', 'troops', 'leaders', 'cards', 'traitors'];
+
+const SECTION_ICON: Record<Section, LucideIcon> = {
+  spice: Coins,
+  zones: Castle,
+  troops: Users,
+  leaders: Crown,
+  cards: Layers,
+  traitors: UserX,
+};
+
+const SECTION_LABEL_KEY: Record<Section, string> = {
+  spice: 'tracker.spiceLabel',
+  zones: 'tracker.zones',
+  troops: 'tracker.troops',
+  leaders: 'tracker.leaders',
+  cards: 'tracker.cards',
+  traitors: 'tracker.traitors',
+};
 
 const TOTAL_TROOPS = 20;
 
@@ -84,8 +107,18 @@ export const CardsPage = () => {
   const [traitorPickTarget, setTraitorPickTarget] = useState<Traitor | null>(null);
   const [addingTraitorFor, setAddingTraitorFor] = useState<FactionId | null>(null);
   const [selectedFactions, setSelectedFactions] = useState<Set<FactionId>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>('full');
+  const [hiddenSections, setHiddenSections] = useState<Set<Section>>(new Set());
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const toggleSection = (s: Section) => {
+    setHiddenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      return next;
+    });
+  };
+  const isVisible = (s: Section) => !hiddenSections.has(s);
 
   if (!game) return <Navigate to="/games" replace />;
 
@@ -235,11 +268,11 @@ export const CardsPage = () => {
         >
           <span className="flex items-center gap-1.5">
             <Filter size={12} className="text-atreides-gold" /> {t('tracker.filterMobile')}
-            {(selectedFactions.size > 0 || viewMode === 'cards') && (
+            {(selectedFactions.size > 0 || hiddenSections.size > 0) && (
               <span className="ml-1 text-[10px] text-atreides-gold font-mono normal-case tracking-normal">
                 {selectedFactions.size > 0 && t('tracker.factionsActive', { count: selectedFactions.size })}
-                {selectedFactions.size > 0 && viewMode === 'cards' && ' · '}
-                {viewMode === 'cards' && t('tracker.modeCards')}
+                {selectedFactions.size > 0 && hiddenSections.size > 0 && ' · '}
+                {hiddenSections.size > 0 && t('tracker.sectionsHidden', { count: hiddenSections.size })}
               </span>
             )}
           </span>
@@ -303,20 +336,26 @@ export const CardsPage = () => {
           <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted flex items-center gap-1.5">
             <Eye size={11} /> {t('tracker.tracked')}
           </span>
-          <div className="flex items-center gap-0.5 rounded border border-atreides-gold/15 p-0.5">
-            <ViewModeBtn
-              active={viewMode === 'full'}
-              onClick={() => setViewMode('full')}
-              icon={<LayoutGrid size={11} />}
-              label={t('tracker.viewAll')}
-            />
-            <ViewModeBtn
-              active={viewMode === 'cards'}
-              onClick={() => setViewMode('cards')}
-              icon={<Layers size={11} />}
-              label={t('tracker.viewCards')}
-            />
-          </div>
+          {SECTION_ORDER.map((s) => {
+            const Icon = SECTION_ICON[s];
+            const visible = isVisible(s);
+            return (
+              <button
+                key={s}
+                onClick={() => toggleSection(s)}
+                title={t(SECTION_LABEL_KEY[s])}
+                aria-pressed={visible}
+                className={cn(
+                  'shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all',
+                  visible
+                    ? 'border-atreides-gold shadow-goldGlow text-atreides-gold'
+                    : 'border-atreides-gold/15 text-atreides-silverMuted/60 opacity-40',
+                )}
+              >
+                <Icon size={14} />
+              </button>
+            );
+          })}
         </div>
         </div>
       </div>
@@ -365,7 +404,7 @@ export const CardsPage = () => {
               }
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
-              {viewMode === 'full' && (
+              {isVisible('spice') && (
               <>
               {/* Épice — ligne compacte */}
               <div className="flex items-center justify-between gap-2 mb-2">
@@ -392,7 +431,11 @@ export const CardsPage = () => {
                   </button>
                 </div>
               </div>
+              </>
+              )}
 
+              {isVisible('zones') && (
+              <>
               {/* Zones contrôlées — sélecteur 0..4 */}
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="flex items-baseline gap-1.5">
@@ -421,7 +464,11 @@ export const CardsPage = () => {
                   ))}
                 </div>
               </div>
+              </>
+              )}
 
+              {isVisible('troops') && (
+              <>
               {/* Troupes — section avec stepper inputs */}
               <div className="mb-4 pt-1">
                 <div className="flex items-baseline justify-between mb-2">
@@ -462,9 +509,11 @@ export const CardsPage = () => {
                   />
                 </div>
               </div>
+              </>
+              )}
 
               {/* Leaders — vivants/tombés */}
-              {factionState && factionState.leaders.length > 0 && (
+              {isVisible('leaders') && factionState && factionState.leaders.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
@@ -502,9 +551,8 @@ export const CardsPage = () => {
                 </div>
               )}
 
-              </>
-              )}
-
+              {isVisible('cards') && (
+              <>
               {/* Cartes en main */}
               <SectionHeader
                 label={t('tracker.cards')}
@@ -530,9 +578,11 @@ export const CardsPage = () => {
               >
                 <Plus size={12} /> {t('tracker.addCard')}
               </button>
+              </>
+              )}
 
               {/* Traîtres */}
-              {viewMode === 'full' && (
+              {isVisible('traitors') && (
               <div className="mt-5">
                 <SectionHeader
                   label={t('tracker.traitors')}
@@ -706,32 +756,6 @@ const SpiceBtn = ({
     )}
   >
     {children}
-  </button>
-);
-
-const ViewModeBtn = ({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) => (
-  <button
-    onClick={onClick}
-    aria-pressed={active}
-    className={cn(
-      'flex items-center gap-1 px-2 py-1 rounded text-[10px] font-display uppercase tracking-wider transition-colors',
-      active
-        ? 'bg-atreides-gold/15 text-atreides-gold'
-        : 'text-atreides-silverMuted hover:text-atreides-silver',
-    )}
-  >
-    {icon}
-    {label}
   </button>
 );
 
