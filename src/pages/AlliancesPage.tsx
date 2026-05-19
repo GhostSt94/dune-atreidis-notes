@@ -50,7 +50,7 @@ export const AlliancesPage = () => {
   const analysis = useAnalysis();
   const [selectedPair, setSelectedPair] = useState<[FactionId, FactionId] | null>(null);
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
   const factions = byGame[game.id];
   if (!factions || !analysis) return null;
   const controls = mapByGame[game.id] ?? {};

@@ -25,7 +25,7 @@ export const FactionsPage = () => {
   const analysis = useAnalysis();
   const [selected, setSelected] = useState<FactionId | null>(null);
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
   const map = byGame[game.id];
   if (!map) return null;
 

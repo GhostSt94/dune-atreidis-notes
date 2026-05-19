@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
-import { GamesListPage } from '@/pages/GamesListPage';
 import { NewGamePage } from '@/pages/NewGamePage';
 import { FactionsPage } from '@/pages/FactionsPage';
 import { NotesPage } from '@/pages/NotesPage';
@@ -12,11 +11,17 @@ import { AlliancesPage } from '@/pages/AlliancesPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PredictionsPage } from '@/pages/PredictionsPage';
+import { useCurrentGame } from '@/store';
+
+const RootRedirect = () => {
+  const game = useCurrentGame();
+  return <Navigate to={game ? '/game' : '/games/new'} replace />;
+};
+
 export const AppRouter = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="/games" replace />} />
+    <Route path="/" element={<RootRedirect />} />
     <Route element={<AppShell />}>
-      <Route path="/games" element={<GamesListPage />} />
       <Route path="/games/new" element={<NewGamePage />} />
       <Route path="/game" element={<CardsPage />} />
       <Route path="/game/factions" element={<FactionsPage />} />
@@ -30,6 +35,6 @@ export const AppRouter = () => (
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/settings" element={<SettingsPage />} />
     </Route>
-    <Route path="*" element={<Navigate to="/games" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );

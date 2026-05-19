@@ -19,7 +19,7 @@ export const HistoryPage = () => {
   return (
     <div className="px-4 lg:px-6 py-6 max-w-4xl mx-auto">
       <Link
-        to="/games"
+        to="/"
         className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
       >
         <ArrowLeft size={14} /> {t('history.back')}

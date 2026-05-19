@@ -12,7 +12,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { useCurrentGame } from '@/store';
+import { useCurrentGame, useGameStore } from '@/store';
 import { FACTIONS } from '@/data/factions';
 import { AtreidesIcon } from '@/components/icons/FactionIcon';
 import { useT } from '@/i18n';
@@ -20,6 +20,7 @@ import { useT } from '@/i18n';
 export const Sidebar = () => {
   const t = useT();
   const game = useCurrentGame();
+  const closeGame = useGameStore((s) => s.closeGame);
   const navigate = useNavigate();
   const playerMeta = game ? FACTIONS[game.playerFaction] : null;
 
@@ -104,13 +105,18 @@ export const Sidebar = () => {
         ))}
       </nav>
 
-      <button
-        onClick={() => navigate('/games')}
-        className="flex items-center gap-2 mx-3 mb-4 px-3 py-2 text-xs text-atreides-silverMuted hover:text-atreides-gold transition-colors border-t border-atreides-gold/10 pt-3"
-      >
-        <LogOut size={14} />
-        <span className="font-display uppercase tracking-wider">{t('nav.quitGame')}</span>
-      </button>
+      {game && (
+        <button
+          onClick={() => {
+            closeGame();
+            navigate('/');
+          }}
+          className="flex items-center gap-2 mx-3 mb-4 px-3 py-2 text-xs text-atreides-silverMuted hover:text-atreides-gold transition-colors border-t border-atreides-gold/10 pt-3"
+        >
+          <LogOut size={14} />
+          <span className="font-display uppercase tracking-wider">{t('nav.quitGame')}</span>
+        </button>
+      )}
     </aside>
   );
 };

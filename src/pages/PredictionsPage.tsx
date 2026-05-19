@@ -29,7 +29,7 @@ export const PredictionsPage = () => {
     reasoning: '',
   });
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
 
   const submit = () => {
     add({ ...draft, gameId: game.id });

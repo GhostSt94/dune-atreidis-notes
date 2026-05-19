@@ -19,7 +19,7 @@ export const AnalysisPage = () => {
   const t = useT();
   const game = useCurrentGame();
   const analysis = useAnalysis();
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
   if (!analysis) return null;
 
   return (

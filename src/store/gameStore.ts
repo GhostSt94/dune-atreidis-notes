@@ -6,6 +6,13 @@ import { nextPhase } from '@/data/phases';
 import type { Game, GamePhase } from '@/types/game';
 import type { FactionId } from '@/types/faction';
 import { useJournalStore } from './journalStore';
+import { useFactionStore } from './factionStore';
+import { useNotesStore } from './notesStore';
+import { useCardsStore } from './cardsStore';
+import { useBattlesStore } from './battlesStore';
+import { usePredictionsStore } from './predictionsStore';
+import { useMapStore } from './mapStore';
+import { useTraitorsStore } from './traitorsStore';
 
 interface GameStoreState {
   currentGameId: string | null;
@@ -43,6 +50,18 @@ export const useGameStore = create<GameStore>()(
       games: {},
 
       createGame: ({ name, playerCount, factionsInPlay, playerFaction }) => {
+        // Single-game mode: wipe any pre-existing games before creating the new one.
+        const existing = get().games;
+        for (const existingId of Object.keys(existing)) {
+          useFactionStore.getState().removeGame(existingId);
+          useNotesStore.getState().clearForGame(existingId);
+          useCardsStore.getState().clearForGame(existingId);
+          useBattlesStore.getState().clearForGame(existingId);
+          usePredictionsStore.getState().clearForGame(existingId);
+          useMapStore.getState().removeGame(existingId);
+          useJournalStore.getState().clearForGame(existingId);
+          useTraitorsStore.getState().clearForGame(existingId);
+        }
         const id = newId();
         const game: Game = {
           id,
@@ -57,10 +76,11 @@ export const useGameStore = create<GameStore>()(
           status: 'active',
           playerFaction,
         };
-        set((s) => ({
-          games: { ...s.games, [id]: game },
+        // Replace games entirely (don't merge with stale entries from older versions).
+        set({
+          games: { [id]: game },
           currentGameId: id,
-        }));
+        });
         useJournalStore.getState().log({
           gameId: id,
           turn: 1,

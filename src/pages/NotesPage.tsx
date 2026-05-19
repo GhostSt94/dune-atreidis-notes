@@ -51,7 +51,7 @@ export const NotesPage = () => {
     priority: 'medium' as NotePriority,
   });
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
 
   const filtered = useMemo(
     () =>

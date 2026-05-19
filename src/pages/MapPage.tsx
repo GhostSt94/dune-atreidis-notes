@@ -31,7 +31,7 @@ export const MapPage = () => {
   const [debug, setDebug] = useState(false);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
 
   const current = selected ? controls[selected.id] : null;
 

@@ -1,13 +1,15 @@
-import { useRef } from 'react';
-import { Download, Upload, RotateCcw, User, ArrowLeft } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Download, Upload, RotateCcw, User, ArrowLeft, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Toggle } from '@/components/ui/Toggle';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 import { useT } from '@/i18n';
 import {
   useSettingsStore,
   useProfileStore,
   useGameStore,
+  useCurrentGame,
   useFactionStore,
   useNotesStore,
   useCardsStore,
@@ -15,6 +17,7 @@ import {
   usePredictionsStore,
   useMapStore,
   useJournalStore,
+  cascadeDeleteGame,
 } from '@/store';
 import { downloadJson, readJsonFile, EXPORT_VERSION, type GameExport } from '@/lib/exportImport';
 import { storage } from '@/lib/storage';
@@ -48,6 +51,22 @@ export const SettingsPage = () => {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const currentGame = useCurrentGame();
+  const [confirmNewGame, setConfirmNewGame] = useState(false);
+
+  const handleNewGame = () => {
+    if (currentGame) {
+      setConfirmNewGame(true);
+    } else {
+      navigate('/games/new');
+    }
+  };
+
+  const confirmAndStartNewGame = () => {
+    if (currentGame) cascadeDeleteGame(currentGame.id);
+    setConfirmNewGame(false);
+    navigate('/games/new');
+  };
 
   const exportAll = () => {
     const exports = Object.values(games).map<GameExport>((g) => ({
@@ -105,15 +124,17 @@ export const SettingsPage = () => {
   return (
     <div className="px-4 lg:px-6 py-6 max-w-3xl mx-auto space-y-4">
       <div>
-        <button
-          onClick={() => {
-            if (window.history.length > 1) navigate(-1);
-            else navigate('/games');
-          }}
-          className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
-        >
-          <ArrowLeft size={14} /> {t('settings.backToGames')}
-        </button>
+        {currentGame && (
+          <button
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1);
+              else navigate('/');
+            }}
+            className="inline-flex items-center gap-1.5 text-xs uppercase font-display tracking-wider text-atreides-silverMuted hover:text-atreides-gold transition-colors mb-3"
+          >
+            <ArrowLeft size={14} /> {t('settings.backToGames')}
+          </button>
+        )}
         <h1 className="font-display text-xl uppercase tracking-widest text-atreides-gold">
           {t('settings.title')}
         </h1>
@@ -138,6 +159,35 @@ export const SettingsPage = () => {
             onClick={() => clearProfile()}
           >
             {t('settings.profile.change')}
+          </Button>
+        </div>
+      </Card>
+
+      <Card title={t('settings.game.title')}>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            {currentGame ? (
+              <>
+                <p className="text-sm text-atreides-silver truncate">
+                  {t('settings.game.current', { name: currentGame.name })}
+                </p>
+                <p className="text-[11px] text-atreides-silverMuted font-mono mt-0.5">
+                  {t('settings.game.newDescription')}
+                </p>
+              </>
+            ) : (
+              <p className="text-[11px] text-atreides-silverMuted font-mono">
+                {t('settings.game.newDescription')}
+              </p>
+            )}
+          </div>
+          <Button
+            variant="gold"
+            size="sm"
+            leftIcon={<Sparkles size={14} />}
+            onClick={handleNewGame}
+          >
+            {t('settings.game.newButton')}
           </Button>
         </div>
       </Card>
@@ -242,6 +292,25 @@ export const SettingsPage = () => {
           {t('settings.backupNote', { version: EXPORT_VERSION })}
         </p>
       </Card>
+
+      <Modal
+        open={confirmNewGame}
+        onClose={() => setConfirmNewGame(false)}
+        title={t('settings.game.confirmTitle')}
+        size="sm"
+      >
+        <p className="text-sm text-atreides-silver mb-4">
+          {t('settings.game.confirmDesc')}
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setConfirmNewGame(false)}>
+            {t('settings.game.cancel')}
+          </Button>
+          <Button variant="danger" size="sm" onClick={confirmAndStartNewGame}>
+            {t('settings.game.confirmAction')}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

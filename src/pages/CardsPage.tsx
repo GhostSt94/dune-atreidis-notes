@@ -181,7 +181,7 @@ export const CardsPage = () => {
   const toggleSection = (s: Section) => toggleTrackerSection(s);
   const isVisible = (s: Section) => !hiddenSections.has(s);
 
-  if (!game) return <Navigate to="/games" replace />;
+  if (!game) return <Navigate to="/" replace />;
 
   const list = entries.filter((e) => e.gameId === game.id);
   const inHand = list.filter((e) => e.knowledge === 'known');
