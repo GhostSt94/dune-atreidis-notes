@@ -19,6 +19,12 @@ import {
   Crown,
   UserX,
   Users,
+  Crosshair,
+  Droplet,
+  Zap,
+  Shield as ShieldIcon,
+  Hand,
+  Asterisk,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -29,7 +35,7 @@ import {
   useSettingsStore,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
-import { TREACHERY_CARDS, getCard, cardNameKey, cardDescKey } from '@/data/cards';
+import { TREACHERY_CARDS, getCard, cardNameKey, cardDescKey, cardSubtitleKey } from '@/data/cards';
 import { FACTIONS, FACTION_IDS, factionTextColor } from '@/data/factions';
 import { LEADER_SEED, findLeaderSeed } from '@/data/leaders';
 import type { CardType, TreacheryCard, CardTrackerEntry } from '@/types/card';
@@ -57,6 +63,66 @@ const TYPE_TONE: Record<CardType, 'red' | 'blue' | 'gold' | 'neutral'> = {
   defense: 'blue',
   special: 'gold',
   worthless: 'neutral',
+};
+
+// Themed background per card type — matches the playing-card mockup.
+const CARD_THEME: Record<CardType, { bg: string; border: string; medallion: string; ring: string; icon: string }> = {
+  weapon: {
+    bg: 'bg-[#5a1c1c]', border: 'border-[#7a2828]',
+    medallion: 'bg-gradient-to-br from-red-700 via-red-900 to-red-950',
+    ring: 'ring-red-400/70', icon: 'text-red-50',
+  },
+  defense: {
+    bg: 'bg-[#0e1a3a]', border: 'border-[#1e3160]',
+    medallion: 'bg-gradient-to-br from-blue-700 via-blue-900 to-blue-950',
+    ring: 'ring-blue-400/70', icon: 'text-blue-50',
+  },
+  special: {
+    bg: 'bg-[#2a3a1c]', border: 'border-[#3d5028]',
+    medallion: 'bg-gradient-to-br from-green-700 via-green-900 to-green-950',
+    ring: 'ring-green-400/70', icon: 'text-green-50',
+  },
+  worthless: {
+    bg: 'bg-[#3d2d1a]', border: 'border-[#5a4527]',
+    medallion: 'bg-gradient-to-br from-amber-700 via-amber-900 to-amber-950',
+    ring: 'ring-amber-400/70', icon: 'text-amber-50',
+  },
+};
+
+const UNKNOWN_THEME = {
+  bg: 'bg-atreides-deep/70', border: 'border-atreides-gold/20',
+  medallion: 'bg-gradient-to-br from-atreides-navy to-atreides-deep',
+  ring: 'ring-atreides-gold/40', icon: 'text-atreides-silverMuted',
+};
+
+const getCardIcon = (card: TreacheryCard): LucideIcon => {
+  if (card.type === 'weapon') {
+    if (card.subtype === 'projectile') return Crosshair;
+    if (card.subtype === 'poison') return Droplet;
+    return Zap; // special weapons (lasgun, stone burner)
+  }
+  if (card.type === 'defense') return ShieldIcon;
+  if (card.type === 'special') return Hand;
+  return Asterisk;
+};
+
+const CardMedallion = ({ card, size = 'md' }: { card?: TreacheryCard; size?: 'sm' | 'md' }) => {
+  const Icon = card ? getCardIcon(card) : HelpCircle;
+  const theme = card ? CARD_THEME[card.type] : UNKNOWN_THEME;
+  const dim = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  const iconSize = size === 'sm' ? 14 : 18;
+  return (
+    <div
+      className={cn(
+        'shrink-0 rounded-full flex items-center justify-center ring-2 shadow-md',
+        theme.medallion,
+        theme.ring,
+        dim,
+      )}
+    >
+      <Icon size={iconSize} className={cn('drop-shadow', theme.icon)} />
+    </div>
+  );
 };
 
 type AddTarget = { factionId: FactionId } | { eliminated: true };
@@ -903,39 +969,32 @@ const CardEntryRow = ({
   const card = entry.cardId ? getCard(entry.cardId) : undefined;
   const [restoreOpen, setRestoreOpen] = useState(false);
 
+  const theme = card ? CARD_THEME[card.type] : UNKNOWN_THEME;
+
   return (
     <motion.li
       initial={{ opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02 }}
       className={cn(
-        'p-2 rounded border bg-atreides-deep/40 flex items-center gap-2',
-        isEliminated ? 'border-severity-danger/30' : 'border-atreides-gold/15',
+        'rounded-md border flex items-center gap-2.5 px-2.5 py-2',
+        theme.bg,
+        theme.border,
+        isEliminated && 'opacity-60 saturate-50',
       )}
     >
-      {card ? (
-        <Badge tone={TYPE_TONE[card.type]}>{card.type}</Badge>
-      ) : (
-        <HelpCircle size={14} className="text-atreides-silverMuted shrink-0" />
-      )}
+      <CardMedallion card={card} size="sm" />
       <div className="flex-1 min-w-0">
         <p
           className={cn(
-            'text-sm truncate flex items-baseline gap-2',
-            card ? 'text-atreides-silver font-serif' : 'text-atreides-silverMuted italic',
+            'text-sm font-serif uppercase tracking-wider truncate',
+            card ? 'text-atreides-silver' : 'text-atreides-silverMuted italic normal-case',
           )}
         >
-          <span className="truncate">
-            {card ? t(cardNameKey(card)) : t('tracker.cardRow.unknown')}
-          </span>
-          {card?.subtype && (
-            <span className="shrink-0 text-[10px] font-display uppercase tracking-wider text-atreides-gold/70">
-              {t(`cards.subtype.${card.subtype}`)}
-            </span>
-          )}
+          {card ? t(cardNameKey(card)) : t('tracker.cardRow.unknown')}
         </p>
-        <p className="text-[10px] font-mono text-atreides-silverMuted">
-          {t('tracker.cardRow.atTurn', { turn: entry.notedAtTurn })}
+        <p className="text-[9px] font-display uppercase tracking-widest text-atreides-silver/60 mt-0.5">
+          {card ? t(cardSubtitleKey(card)) : t('cards.unknown.subtitle')}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
@@ -1364,34 +1423,40 @@ const CardCatalog = ({
                 {groups.length}
               </span>
             </div>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {groups.map((g) => (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {groups.map((g) => {
+                const theme = CARD_THEME[g.sample.type];
+                return (
                 <li key={g.sample.slug}>
                   <button
                     onClick={() => onSelect(g.availableIds[0])}
-                    className="w-full text-left p-2 rounded border border-atreides-gold/15 bg-atreides-deep/40 hover:border-atreides-gold/50 hover:bg-atreides-navy/40 transition-colors flex items-start gap-2"
+                    className={cn(
+                      'group w-full text-left px-3 py-2.5 rounded-md border flex items-center gap-3 transition-all hover:brightness-110 hover:ring-2 hover:ring-amber-500/40',
+                      theme.bg,
+                      theme.border,
+                    )}
                   >
+                    <CardMedallion card={g.sample} size="md" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-serif text-atreides-silver flex items-baseline gap-2">
-                        <span className="truncate">{t(cardNameKey(g.sample))}</span>
-                        {g.sample.subtype && (
-                          <span className="shrink-0 text-[10px] font-display uppercase tracking-wider text-atreides-gold/70">
-                            {t(`cards.subtype.${g.sample.subtype}`)}
-                          </span>
-                        )}
+                      <p className="text-base font-serif uppercase tracking-wider text-atreides-silver truncate">
+                        {t(cardNameKey(g.sample))}
                       </p>
-                      <p className="text-[10px] text-atreides-silverMuted mt-0.5 line-clamp-2">
+                      <p className="text-[10px] font-display uppercase tracking-widest text-atreides-silver/70 mt-0.5">
+                        {t(cardSubtitleKey(g.sample))}
+                      </p>
+                      <p className="text-[10px] text-atreides-silver/60 mt-1 line-clamp-2">
                         {t(cardDescKey(g.sample))}
                       </p>
                     </div>
                     {g.availableIds.length > 1 && (
-                      <span className="shrink-0 text-[11px] font-mono font-display text-atreides-gold border border-atreides-gold/40 rounded px-1.5 py-0.5 self-center">
+                      <span className="shrink-0 self-start text-[11px] font-mono font-display text-amber-100 border border-amber-500/60 rounded px-1.5 py-0.5">
                         ×{g.availableIds.length}
                       </span>
                     )}
                   </button>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </section>
         );

@@ -92,6 +92,21 @@ export const getCard = (id: string): TreacheryCard | undefined =>
 export const cardNameKey = (card: TreacheryCard): string => `card.${card.slug}.name`;
 export const cardDescKey = (card: TreacheryCard): string => `card.${card.slug}.desc`;
 
+/** i18n key for the short caption shown under the card name (e.g. "Weapon - Projectile"). */
+export const cardSubtitleKey = (card: TreacheryCard): string => {
+  if (card.type === 'weapon') {
+    if (card.subtype) return `cards.subtitle.weapon.${card.subtype}`;
+    return 'cards.subtitle.weapon.special';
+  }
+  if (card.type === 'defense') {
+    if (card.slug === 'shield') return 'cards.subtitle.defense.projectile';
+    if (card.slug === 'snooper') return 'cards.subtitle.defense.poison';
+    return 'cards.subtitle.defense.generic';
+  }
+  if (card.type === 'special') return 'cards.subtitle.special';
+  return 'cards.subtitle.worthless';
+};
+
 /** True if the card is a poison weapon (countered by Snooper). */
 export const isPoison = (card: TreacheryCard): boolean =>
   card.type === 'weapon' && card.subtype === 'poison';
