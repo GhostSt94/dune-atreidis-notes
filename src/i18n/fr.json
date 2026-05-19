@@ -112,6 +112,8 @@
   "cards.type.defense": "Défenses",
   "cards.type.special": "Spéciales",
   "cards.type.worthless": "Sans valeur",
+  "cards.subtype.projectile": "Arme projectile",
+  "cards.subtype.poison": "Arme poison",
 
   "card.lasgun.name": "Lasgun",
   "card.lasgun.desc": "Tue instantanément le leader. Cause une explosion nucléaire contre un Bouclier.",
@@ -155,6 +157,8 @@
   "card.tleilaxu_ghola.desc": "Ressuscite leader ou troupes.",
   "card.truthtrance.name": "Vérité Absolue",
   "card.truthtrance.desc": "Force une réponse honnête.",
+  "card.stone_burner.name": "Brûleur de Pierre",
+  "card.stone_burner.desc": "Arme atomique massive provoquant une destruction de zone dévastatrice.",
   "card.cheap_hero.name": "Faux héros",
   "card.cheap_hero.desc": "Leader remplaçant de faible valeur.",
   "card.cheap_heroine.name": "Fausse héroïne",

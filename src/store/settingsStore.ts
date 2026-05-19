@@ -11,12 +11,14 @@ interface SettingsStore {
   autosaveToast: boolean;
   useValue10Leaders: boolean;
   language: Lang;
+  hiddenTrackerSections: string[];
   toggleFog: () => void;
   setDensity: (d: Density) => void;
   toggleMobileQuickAccess: () => void;
   toggleAutosaveToast: () => void;
   toggleValue10Leaders: () => void;
   setLanguage: (l: Lang) => void;
+  toggleTrackerSection: (section: string) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -28,6 +30,7 @@ export const useSettingsStore = create<SettingsStore>()(
       autosaveToast: true,
       useValue10Leaders: false,
       language: 'en',
+      hiddenTrackerSections: [],
       toggleFog: () => set((s) => ({ fogOfWar: !s.fogOfWar })),
       setDensity: (d) => set({ density: d }),
       toggleMobileQuickAccess: () => set((s) => ({ mobileQuickAccess: !s.mobileQuickAccess })),
@@ -35,6 +38,12 @@ export const useSettingsStore = create<SettingsStore>()(
       toggleValue10Leaders: () =>
         set((s) => ({ useValue10Leaders: !s.useValue10Leaders })),
       setLanguage: (language) => set({ language }),
+      toggleTrackerSection: (section) =>
+        set((s) => ({
+          hiddenTrackerSections: s.hiddenTrackerSections.includes(section)
+            ? s.hiddenTrackerSections.filter((x) => x !== section)
+            : [...s.hiddenTrackerSections, section],
+        })),
     }),
     { name: 'dune.settings' },
   ),

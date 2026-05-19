@@ -107,17 +107,12 @@ export const CardsPage = () => {
   const [traitorPickTarget, setTraitorPickTarget] = useState<Traitor | null>(null);
   const [addingTraitorFor, setAddingTraitorFor] = useState<FactionId | null>(null);
   const [selectedFactions, setSelectedFactions] = useState<Set<FactionId>>(new Set());
-  const [hiddenSections, setHiddenSections] = useState<Set<Section>>(new Set());
+  const hiddenSectionsArr = useSettingsStore((s) => s.hiddenTrackerSections);
+  const toggleTrackerSection = useSettingsStore((s) => s.toggleTrackerSection);
+  const hiddenSections = useMemo(() => new Set(hiddenSectionsArr), [hiddenSectionsArr]);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const toggleSection = (s: Section) => {
-    setHiddenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
-      return next;
-    });
-  };
+  const toggleSection = (s: Section) => toggleTrackerSection(s);
   const isVisible = (s: Section) => !hiddenSections.has(s);
 
   if (!game) return <Navigate to="/games" replace />;
@@ -1373,6 +1368,11 @@ const CardCatalog = ({
                       <p className="text-sm font-serif text-atreides-silver">
                         {t(cardNameKey(g.sample))}
                       </p>
+                      {g.sample.subtype && (
+                        <p className="text-[10px] font-display uppercase tracking-wider text-atreides-gold/70 mt-0.5">
+                          {t(`cards.subtype.${g.sample.subtype}`)}
+                        </p>
+                      )}
                       <p className="text-[10px] text-atreides-silverMuted mt-0.5 line-clamp-2">
                         {t(cardDescKey(g.sample))}
                       </p>

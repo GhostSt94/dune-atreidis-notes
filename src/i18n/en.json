@@ -112,6 +112,8 @@
   "cards.type.defense": "Defenses",
   "cards.type.special": "Special",
   "cards.type.worthless": "Worthless",
+  "cards.subtype.projectile": "Projectile weapon",
+  "cards.subtype.poison": "Poison weapon",
 
   "card.lasgun.name": "Lasgun",
   "card.lasgun.desc": "Instantly kills leader. Causes a nuclear explosion if used against a Shield.",
@@ -155,6 +157,8 @@
   "card.tleilaxu_ghola.desc": "Revives leader or troops.",
   "card.truthtrance.name": "Truthtrance",
   "card.truthtrance.desc": "Forces a truthful answer.",
+  "card.stone_burner.name": "Stone Burner",
+  "card.stone_burner.desc": "Massive atomic weapon causing devastating area destruction.",
   "card.cheap_hero.name": "Cheap Hero",
   "card.cheap_hero.desc": "Low-value substitute leader.",
   "card.cheap_heroine.name": "Cheap Heroine",

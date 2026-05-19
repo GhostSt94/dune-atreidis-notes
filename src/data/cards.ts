@@ -27,6 +27,9 @@ const SEEDS: CardSeed[] = [
   { slug: 'semuta_drug', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.59, quantity: 1 },
   { slug: 'kriminon', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.71, quantity: 1 },
 
+  // Special weapon — ignores defenses (kills both sides regardless of shield/snooper)
+  { slug: 'stone_burner', type: 'weapon', battleImpact: 1.0, quantity: 1 },
+
   // Defenses
   { slug: 'shield', type: 'defense', battleImpact: 0.82, quantity: 5 },
   { slug: 'snooper', type: 'defense', battleImpact: 0.81, quantity: 5 },
