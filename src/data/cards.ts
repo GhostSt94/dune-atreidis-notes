@@ -11,7 +11,8 @@ interface CardSeed {
 
 const SEEDS: CardSeed[] = [
   // Projectile weapons (countered by Shield)
-  { slug: 'lasgun', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.98, quantity: 1 },
+  // Lasgun — special weapon, ignores defenses (causes atomic explosion vs Shield)
+  { slug: 'lasgun', type: 'weapon', battleImpact: 0.98, quantity: 1 },
   { slug: 'maula_pistol', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.61, quantity: 1 },
   { slug: 'hunter_seeker', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.73, quantity: 1 },
   { slug: 'slip_tip', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.58, quantity: 1 },

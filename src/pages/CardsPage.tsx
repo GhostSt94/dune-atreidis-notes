@@ -921,11 +921,18 @@ const CardEntryRow = ({
       <div className="flex-1 min-w-0">
         <p
           className={cn(
-            'text-sm truncate',
+            'text-sm truncate flex items-baseline gap-2',
             card ? 'text-atreides-silver font-serif' : 'text-atreides-silverMuted italic',
           )}
         >
-          {card ? t(cardNameKey(card)) : t('tracker.cardRow.unknown')}
+          <span className="truncate">
+            {card ? t(cardNameKey(card)) : t('tracker.cardRow.unknown')}
+          </span>
+          {card?.subtype && (
+            <span className="shrink-0 text-[10px] font-display uppercase tracking-wider text-atreides-gold/70">
+              {t(`cards.subtype.${card.subtype}`)}
+            </span>
+          )}
         </p>
         <p className="text-[10px] font-mono text-atreides-silverMuted">
           {t('tracker.cardRow.atTurn', { turn: entry.notedAtTurn })}
@@ -1365,14 +1372,14 @@ const CardCatalog = ({
                     className="w-full text-left p-2 rounded border border-atreides-gold/15 bg-atreides-deep/40 hover:border-atreides-gold/50 hover:bg-atreides-navy/40 transition-colors flex items-start gap-2"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-serif text-atreides-silver">
-                        {t(cardNameKey(g.sample))}
+                      <p className="text-sm font-serif text-atreides-silver flex items-baseline gap-2">
+                        <span className="truncate">{t(cardNameKey(g.sample))}</span>
+                        {g.sample.subtype && (
+                          <span className="shrink-0 text-[10px] font-display uppercase tracking-wider text-atreides-gold/70">
+                            {t(`cards.subtype.${g.sample.subtype}`)}
+                          </span>
+                        )}
                       </p>
-                      {g.sample.subtype && (
-                        <p className="text-[10px] font-display uppercase tracking-wider text-atreides-gold/70 mt-0.5">
-                          {t(`cards.subtype.${g.sample.subtype}`)}
-                        </p>
-                      )}
                       <p className="text-[10px] text-atreides-silverMuted mt-0.5 line-clamp-2">
                         {t(cardDescKey(g.sample))}
                       </p>
