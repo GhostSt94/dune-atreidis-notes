@@ -42,6 +42,7 @@ const SEEDS: CardSeed[] = [
   { slug: 'weather_control', type: 'special', battleImpact: 0.57, quantity: 1 },
   { slug: 'tleilaxu_ghola', type: 'special', battleImpact: 0.79, quantity: 1 },
   { slug: 'truthtrance', type: 'special', battleImpact: 0.72, quantity: 3 },
+  { slug: 'thumper', type: 'special', battleImpact: 0.4, quantity: 1 },
   { slug: 'cheap_hero', type: 'special', battleImpact: 0.33, quantity: 2 },
   { slug: 'cheap_heroine', type: 'special', battleImpact: 0.31, quantity: 2 },
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +22,7 @@ import {
   Shield as ShieldIcon,
   Hand,
   Asterisk,
+  Gavel,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -164,6 +165,7 @@ export const CardsPage = () => {
   const [traitorPickTarget, setTraitorPickTarget] = useState<Traitor | null>(null);
   const [addingTraitorFor, setAddingTraitorFor] = useState<FactionId | null>(null);
   const [selectedFactions, setSelectedFactions] = useState<Set<FactionId>>(new Set());
+  const [biddingOpen, setBiddingOpen] = useState(false);
   const hiddenSectionsArr = useSettingsStore((s) => s.hiddenTrackerSections);
   const toggleTrackerSection = useSettingsStore((s) => s.toggleTrackerSection);
   const hiddenSections = useMemo(() => new Set(hiddenSectionsArr), [hiddenSectionsArr]);
@@ -306,6 +308,38 @@ export const CardsPage = () => {
   const addTraitorUnknown = (factionId: FactionId) => {
     addTraitorSlot(game.id, factionId);
     setAddingTraitorFor(null);
+  };
+
+  const applyBid = ({
+    cardId,
+    winner,
+    price,
+  }: {
+    cardId: string;
+    winner: FactionId;
+    price: number;
+  }) => {
+    addEntry({
+      gameId: game.id,
+      cardId,
+      knowledge: 'known',
+      heldBy: winner,
+      notedAtTurn: game.currentTurn,
+    });
+    const winnerSpice =
+      factionStateByGame[game.id]?.[winner]?.estimatedSpice ?? FACTIONS[winner].startingSpice;
+    updateFaction(game.id, winner, {
+      estimatedSpice: Math.max(0, winnerSpice - price),
+    });
+    const emperorInPlay = game.factionsInPlay.includes('emperor');
+    if (winner !== 'emperor' && emperorInPlay) {
+      const empSpice =
+        factionStateByGame[game.id]?.emperor?.estimatedSpice ?? FACTIONS.emperor.startingSpice;
+      updateFaction(game.id, 'emperor', {
+        estimatedSpice: empSpice + price,
+      });
+    }
+    setBiddingOpen(false);
   };
 
   return (
@@ -704,6 +738,26 @@ export const CardsPage = () => {
           />
         )}
       </Modal>
+
+      {/* Bidding modal */}
+      <BiddingModal
+        open={biddingOpen}
+        onClose={() => setBiddingOpen(false)}
+        onConfirm={applyBid}
+        groupedCards={groupedCards}
+        usedCardIds={usedCardIds}
+        factionsInPlay={game.factionsInPlay}
+      />
+
+      {/* Floating bidding button */}
+      <button
+        onClick={() => setBiddingOpen(true)}
+        title={t('tracker.bidding.fabTitle')}
+        aria-label={t('tracker.bidding.fabTitle')}
+        className="fixed bottom-24 right-4 z-20 w-14 h-14 rounded-full bg-gradient-to-br from-atreides-gold via-atreides-goldSoft to-atreides-gold/80 text-atreides-deep shadow-goldGlow ring-2 ring-atreides-gold/60 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+      >
+        <Gavel size={22} />
+      </button>
     </div>
   );
 };
@@ -1313,5 +1367,193 @@ const CardCatalog = ({
         );
       })}
     </div>
+  );
+};
+
+// ──────────────────────────────────────────────────────────
+
+interface BiddingModalProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (input: { cardId: string; winner: FactionId; price: number }) => void;
+  groupedCards: Record<CardType, TreacheryCard[]>;
+  usedCardIds: Set<string>;
+  factionsInPlay: FactionId[];
+}
+
+const BiddingModal = ({
+  open,
+  onClose,
+  onConfirm,
+  groupedCards,
+  usedCardIds,
+  factionsInPlay,
+}: BiddingModalProps) => {
+  const t = useT();
+  const [step, setStep] = useState<'card' | 'details'>('card');
+  const [pickedCardId, setPickedCardId] = useState<string | null>(null);
+  const [winner, setWinner] = useState<FactionId | null>(null);
+  const [price, setPrice] = useState<string>('0');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setStep('card');
+      setPickedCardId(null);
+      setWinner(null);
+      setPrice('0');
+      setSearch('');
+    }
+  }, [open]);
+
+  const pickedCard = pickedCardId ? getCard(pickedCardId) : undefined;
+  const priceNum = parseInt(price, 10);
+  const canConfirm =
+    pickedCardId !== null && winner !== null && Number.isFinite(priceNum) && priceNum >= 0;
+
+  const handleSelectCard = (cardId: string) => {
+    setPickedCardId(cardId);
+    setStep('details');
+  };
+
+  const handleConfirm = () => {
+    if (!canConfirm || pickedCardId === null || winner === null) return;
+    onConfirm({ cardId: pickedCardId, winner, price: priceNum });
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={
+        <span className="flex items-center gap-2">
+          <Gavel size={16} className="text-atreides-gold" />
+          {t('tracker.bidding.title')}
+        </span>
+      }
+      size="lg"
+    >
+      {step === 'card' && (
+        <>
+          <p className="text-xs text-atreides-silverMuted mb-3">
+            {t('tracker.bidding.stepCard')}
+          </p>
+          <Input
+            placeholder={t('tracker.addCardModal.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mb-3"
+          />
+          <CardCatalog
+            groupedCards={groupedCards}
+            search={search}
+            onSelect={handleSelectCard}
+            usedCardIds={usedCardIds}
+          />
+        </>
+      )}
+
+      {step === 'details' && pickedCard && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3 p-3 rounded-md border border-atreides-gold/25 bg-atreides-deep/40">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-display tracking-widest text-atreides-silverMuted">
+                {t('tracker.bidding.pickedCard', { name: t(cardNameKey(pickedCard)) })}
+              </p>
+              <p className="text-sm font-serif uppercase tracking-wider text-atreides-silver truncate mt-0.5">
+                {t(cardNameKey(pickedCard))}
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setStep('card')}>
+              {t('tracker.bidding.changeCard')}
+            </Button>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase font-display tracking-widest text-atreides-silverMuted mb-2">
+              {t('tracker.bidding.winner')}
+            </p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {factionsInPlay.map((id) => {
+                const isActive = winner === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setWinner(id)}
+                    title={t(`faction.${id}.short`)}
+                    aria-pressed={isActive}
+                    className={cn(
+                      'flex flex-col items-center gap-1 p-2 rounded-md border transition-all',
+                      isActive
+                        ? 'border-atreides-gold bg-atreides-gold/10 shadow-goldGlow'
+                        : 'border-atreides-gold/15 hover:border-atreides-gold/50',
+                    )}
+                  >
+                    <FactionIcon faction={id} size={28} />
+                    <span
+                      className="text-[10px] font-display uppercase tracking-wider truncate w-full text-center"
+                      style={{ color: factionTextColor(id) }}
+                    >
+                      {t(`faction.${id}.short`)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] uppercase font-display tracking-widest text-atreides-silverMuted mb-1.5">
+              {t('tracker.bidding.price')}
+            </label>
+            <div className="flex items-stretch">
+              <button
+                type="button"
+                onClick={() =>
+                  setPrice((p) => String(Math.max(0, (parseInt(p, 10) || 0) - 1)))
+                }
+                aria-label="−1"
+                className="w-10 rounded-l-md border border-r-0 border-atreides-gold/30 text-atreides-silver hover:text-atreides-gold hover:border-atreides-gold/60 hover:bg-atreides-deep/60 transition-colors font-mono text-sm"
+              >
+                −1
+              </button>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="flex-1 text-center font-mono text-base bg-atreides-deep/60 border-y border-atreides-gold/30 text-atreides-silver focus:outline-none focus:border-atreides-gold/60 focus:bg-atreides-deep tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setPrice((p) => String(Math.max(0, (parseInt(p, 10) || 0) + 1)))
+                }
+                aria-label="+1"
+                className="w-10 rounded-r-md border border-l-0 border-atreides-gold/30 text-atreides-silver hover:text-atreides-gold hover:border-atreides-gold/60 hover:bg-atreides-deep/60 transition-colors font-mono text-sm"
+              >
+                +1
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-atreides-gold/10">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              {t('tracker.bidding.cancel')}
+            </Button>
+            <Button
+              variant="gold"
+              size="sm"
+              disabled={!canConfirm}
+              onClick={handleConfirm}
+              leftIcon={<Gavel size={14} />}
+            >
+              {t('tracker.bidding.confirm')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 };
