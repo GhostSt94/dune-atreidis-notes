@@ -1,13 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  Users,
   StickyNote,
   Layers,
-  Swords,
-  Map,
-  Brain,
-  Handshake,
-  History,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -26,16 +20,10 @@ export const Sidebar = () => {
 
   const navItems = [
     { to: '/game', labelKey: 'nav.tracker', icon: Layers, end: true },
-    { to: '/game/factions', labelKey: 'nav.factions', icon: Users },
     { to: '/game/notes', labelKey: 'nav.notes', icon: StickyNote },
-    { to: '/game/battles', labelKey: 'nav.battles', icon: Swords },
-    { to: '/game/map', labelKey: 'nav.map', icon: Map },
-    { to: '/game/alliances', labelKey: 'nav.alliances', icon: Handshake },
-    { to: '/game/analysis', labelKey: 'nav.strategy', icon: Brain },
   ];
 
   const secondary = [
-    { to: '/history', labelKey: 'nav.history', icon: History },
     { to: '/settings', labelKey: 'nav.settings', icon: Settings },
   ];
 

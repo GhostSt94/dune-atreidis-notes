@@ -25,14 +25,10 @@ import { useNavigate } from 'react-router-dom';
 
 export const SettingsPage = () => {
   const t = useT();
-  const fog = useSettingsStore((s) => s.fogOfWar);
-  const toggleFog = useSettingsStore((s) => s.toggleFog);
   const autosave = useSettingsStore((s) => s.autosaveToast);
   const toggleAutosave = useSettingsStore((s) => s.toggleAutosaveToast);
   const density = useSettingsStore((s) => s.density);
   const setDensity = useSettingsStore((s) => s.setDensity);
-  const mobile = useSettingsStore((s) => s.mobileQuickAccess);
-  const toggleMobile = useSettingsStore((s) => s.toggleMobileQuickAccess);
   const useValue10 = useSettingsStore((s) => s.useValue10Leaders);
   const toggleValue10 = useSettingsStore((s) => s.toggleValue10Leaders);
   const language = useSettingsStore((s) => s.language);
@@ -195,22 +191,10 @@ export const SettingsPage = () => {
       <Card title={t('settings.display')}>
         <div className="space-y-3">
           <Toggle
-            checked={fog}
-            onChange={toggleFog}
-            label={t('settings.fog')}
-            description={t('settings.fog.desc')}
-          />
-          <Toggle
             checked={autosave}
             onChange={toggleAutosave}
             label={t('settings.autosave')}
             description={t('settings.autosave.desc')}
-          />
-          <Toggle
-            checked={mobile}
-            onChange={toggleMobile}
-            label={t('settings.mobile')}
-            description={t('settings.mobile.desc')}
           />
           <div className="flex items-center gap-3 pt-2">
             <span className="text-sm text-atreides-silver">{t('settings.density')}</span>

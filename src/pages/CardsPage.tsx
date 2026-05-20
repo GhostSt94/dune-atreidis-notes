@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,14 +11,11 @@ import {
   X,
   Coins,
   RotateCw,
-  Castle,
-  MapPin,
   Filter,
   Layers,
   ChevronDown,
   Crown,
   UserX,
-  Users,
   Crosshair,
   Droplet,
   Zap,
@@ -126,14 +123,12 @@ const CardMedallion = ({ card, size = 'md' }: { card?: TreacheryCard; size?: 'sm
 };
 
 type AddTarget = { factionId: FactionId } | { eliminated: true };
-type Section = 'spice' | 'zones' | 'troops' | 'leaders' | 'cards' | 'traitors';
+type Section = 'spice' | 'leaders' | 'cards' | 'traitors';
 
-const SECTION_ORDER: Section[] = ['spice', 'zones', 'troops', 'leaders', 'cards', 'traitors'];
+const SECTION_ORDER: Section[] = ['spice', 'leaders', 'cards', 'traitors'];
 
 const SECTION_ICON: Record<Section, LucideIcon> = {
   spice: Coins,
-  zones: Castle,
-  troops: Users,
   leaders: Crown,
   cards: Layers,
   traitors: UserX,
@@ -141,14 +136,10 @@ const SECTION_ICON: Record<Section, LucideIcon> = {
 
 const SECTION_LABEL_KEY: Record<Section, string> = {
   spice: 'tracker.spiceLabel',
-  zones: 'tracker.zones',
-  troops: 'tracker.troops',
   leaders: 'tracker.leaders',
   cards: 'tracker.cards',
   traitors: 'tracker.traitors',
 };
-
-const TOTAL_TROOPS = 20;
 
 export const CardsPage = () => {
   const t = useT();
@@ -432,11 +423,6 @@ export const CardsPage = () => {
           const factionTraitors = traitorsByFaction.get(id) ?? [];
           const factionState = factionStateByGame[game.id]?.[id];
           const spice = factionState?.estimatedSpice ?? meta.startingSpice;
-          const zones = factionState?.zonesControlled ?? 0;
-          const dead = factionState?.troopsDead ?? 0;
-          const onMap = factionState?.troopsOnMap ?? 0;
-          const reserve = TOTAL_TROOPS - dead - onMap;
-          const reserveOverflow = reserve < 0;
 
           const adjustSpice = (delta: number) => {
             updateFaction(game.id, id, {
@@ -446,11 +432,6 @@ export const CardsPage = () => {
           const setSpice = (value: number) => {
             updateFaction(game.id, id, {
               estimatedSpice: Math.max(0, Number.isFinite(value) ? value : 0),
-            });
-          };
-          const setZones = (value: number) => {
-            updateFaction(game.id, id, {
-              zonesControlled: Math.max(0, Math.min(4, value)),
             });
           };
 
@@ -466,111 +447,44 @@ export const CardsPage = () => {
               variant={id === game.playerFaction ? 'highlight' : 'default'}
             >
               {isVisible('spice') && (
-              <>
-              {/* Épice — ligne compacte */}
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="flex items-baseline gap-1.5">
-                  <Coins size={13} className="text-atreides-gold/80 self-center" />
-                  <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
-                    {spice}
-                  </span>
-                  <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
-                    {t('tracker.spice')}
-                  </span>
-                </span>
-                <div className="flex items-center gap-0.5 font-mono">
-                  <SpiceBtn onClick={() => adjustSpice(-5)}>−5</SpiceBtn>
-                  <SpiceBtn onClick={() => adjustSpice(-1)}>−1</SpiceBtn>
-                  <SpiceBtn onClick={() => adjustSpice(1)}>+1</SpiceBtn>
-                  <SpiceBtn onClick={() => adjustSpice(5)} accent>+5</SpiceBtn>
-                  <button
-                    onClick={() => setSpice(meta.startingSpice)}
-                    title={t('tracker.resetSpice', { value: meta.startingSpice })}
-                    className="ml-1 p-1 text-atreides-silverMuted hover:text-atreides-gold transition-colors"
-                  >
-                    <RotateCw size={11} />
-                  </button>
-                </div>
-              </div>
-              </>
-              )}
+                <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+                  {/* Spice meter — pill with glowing value */}
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-gradient-to-r from-atreides-gold/15 via-atreides-gold/5 to-transparent border border-atreides-gold/25">
+                    <Coins
+                      size={16}
+                      className="text-atreides-gold drop-shadow-[0_0_4px_rgba(212,164,55,0.55)]"
+                    />
+                    <div className="flex flex-col leading-none">
+                      <span className="font-display text-xl text-atreides-gold tabular-nums drop-shadow-[0_0_6px_rgba(212,164,55,0.4)]">
+                        {spice}
+                      </span>
+                      <span className="text-[8px] font-mono text-atreides-silverMuted uppercase tracking-[0.2em] mt-0.5">
+                        {t('tracker.spice')}
+                      </span>
+                    </div>
+                  </div>
 
-              {isVisible('zones') && (
-              <>
-              {/* Zones contrôlées — sélecteur 0..4 */}
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="flex items-baseline gap-1.5">
-                  <Castle size={13} className="text-atreides-gold/80 self-center" />
-                  <span className="font-display text-lg text-atreides-gold tabular-nums leading-none">
-                    {zones}
-                  </span>
-                  <span className="text-[10px] font-mono text-atreides-silverMuted uppercase">
-                    {t('tracker.zones')}
-                  </span>
-                </span>
-                <div className="flex items-center gap-0.5 font-mono">
-                  {[0, 1, 2, 3, 4].map((n) => (
+                  <div className="flex items-center gap-1.5">
+                    {/* Segmented +/- control */}
+                    <div className="flex items-stretch rounded-md overflow-hidden border border-atreides-gold/25 bg-atreides-deep/60 font-mono shadow-inner">
+                      <SpiceBtn onClick={() => adjustSpice(-5)}>−5</SpiceBtn>
+                      <span className="w-px bg-atreides-gold/20" />
+                      <SpiceBtn onClick={() => adjustSpice(-1)}>−1</SpiceBtn>
+                      <span className="w-px bg-atreides-gold/20" />
+                      <SpiceBtn onClick={() => adjustSpice(1)}>+1</SpiceBtn>
+                      <span className="w-px bg-atreides-gold/20" />
+                      <SpiceBtn onClick={() => adjustSpice(5)} accent>+5</SpiceBtn>
+                    </div>
                     <button
-                      key={n}
-                      onClick={() => setZones(n)}
-                      className={cn(
-                        'w-7 h-7 rounded text-[11px] transition-colors border',
-                        zones === n
-                          ? 'bg-atreides-gold/20 border-atreides-gold text-atreides-gold'
-                          : 'bg-transparent border-atreides-gold/15 text-atreides-silverMuted hover:border-atreides-gold/40 hover:text-atreides-silver',
-                      )}
+                      onClick={() => setSpice(meta.startingSpice)}
+                      title={t('tracker.resetSpice', { value: meta.startingSpice })}
+                      aria-label={t('tracker.resetSpice', { value: meta.startingSpice })}
+                      className="p-1.5 rounded-md border border-atreides-gold/20 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/50 hover:bg-atreides-deep/60 transition-colors"
                     >
-                      {n}
+                      <RotateCw size={12} />
                     </button>
-                  ))}
+                  </div>
                 </div>
-              </div>
-              </>
-              )}
-
-              {isVisible('troops') && (
-              <>
-              {/* Troupes — section avec stepper inputs */}
-              <div className="mb-4 pt-1">
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="text-[10px] uppercase font-display tracking-wider text-atreides-silverMuted">
-                    {t('tracker.troops')}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[10px] font-mono',
-                      reserveOverflow ? 'text-severity-danger' : 'text-atreides-gold/70',
-                    )}
-                  >
-                    {t('tracker.troopsReserve', { count: reserve, total: TOTAL_TROOPS })}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <TroopStepper
-                    icon={<Skull size={12} />}
-                    label={t('tracker.troopsDead')}
-                    value={dead}
-                    onChange={(n) => {
-                      const newDead = Math.max(0, n);
-                      updateFaction(game.id, id, {
-                        troopsDead: newDead,
-                        estimatedTroops: Math.max(0, TOTAL_TROOPS - newDead),
-                      });
-                    }}
-                  />
-                  <TroopStepper
-                    icon={<MapPin size={12} />}
-                    label={t('tracker.troopsOnMap')}
-                    value={onMap}
-                    onChange={(n) =>
-                      updateFaction(game.id, id, {
-                        troopsOnMap: Math.max(0, n),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              </>
               )}
 
               {/* Leaders — vivants/tombés */}
@@ -810,7 +724,7 @@ const SpiceBtn = ({
   <button
     onClick={onClick}
     className={cn(
-      'px-2 py-1 rounded text-xs transition-colors min-w-[32px] sm:px-1.5 sm:py-0.5 sm:text-[11px] sm:min-w-[26px]',
+      'px-2.5 py-1.5 text-[11px] font-medium tabular-nums transition-colors min-w-[32px]',
       accent
         ? 'text-atreides-gold hover:bg-atreides-gold/15'
         : 'text-atreides-silverMuted hover:text-atreides-silver hover:bg-atreides-navy/40',
@@ -878,69 +792,6 @@ const LeaderAvatar = ({ name, value, portrait, alive, onToggle }: LeaderAvatarPr
       </span>
     )}
   </button>
-  );
-};
-
-interface TroopStepperProps {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  onChange: (n: number) => void;
-}
-
-const TroopStepper = ({ icon, label, value, onChange }: TroopStepperProps) => {
-  const [draft, setDraft] = useState(String(value));
-
-  // Synchronise le draft local quand la valeur source change (ex : ajustement externe)
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
-
-  const commit = () => {
-    const n = parseInt(draft, 10);
-    if (Number.isNaN(n)) {
-      setDraft(String(value));
-      return;
-    }
-    if (n !== value) onChange(Math.max(0, n));
-  };
-
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="flex items-center gap-1.5 text-xs text-atreides-silver">
-        <span className="text-atreides-gold/80">{icon}</span>
-        {label}
-      </span>
-      <div className="flex items-center">
-        <button
-          onClick={() => onChange(Math.max(0, value - 1))}
-          disabled={value <= 0}
-          aria-label="Diminuer"
-          className="w-7 h-7 rounded-l-md border border-r-0 border-atreides-gold/30 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-mono"
-        >
-          −
-        </button>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-          }}
-          className="w-14 h-7 text-center font-mono text-sm bg-atreides-deep/60 border-y border-atreides-gold/30 text-atreides-silver focus:outline-none focus:border-atreides-gold/60 focus:bg-atreides-deep tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0"
-        />
-        <button
-          onClick={() => onChange(value + 1)}
-          aria-label="Augmenter"
-          className="w-7 h-7 rounded-r-md border border-l-0 border-atreides-gold/30 text-atreides-silverMuted hover:text-atreides-gold hover:border-atreides-gold/60 transition-colors font-mono"
-        >
-          +
-        </button>
-      </div>
-    </div>
   );
 };
 
