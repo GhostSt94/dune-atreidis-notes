@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -23,6 +23,7 @@ import {
   Hand,
   Asterisk,
   Gavel,
+  Info,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -472,6 +473,7 @@ export const CardsPage = () => {
           return (
             <UICard
               key={id}
+              className="overflow-visible"
               title={
                 <span className="flex items-center gap-2">
                   <FactionIcon faction={id} size={20} />
@@ -627,7 +629,7 @@ export const CardsPage = () => {
 
       {/* Zone éliminées */}
       <UICard
-        className="mt-4"
+        className="mt-4 overflow-visible"
         title={
           <span className="flex items-center gap-2">
             <Skull size={14} /> {t('tracker.cardsEliminated')}
@@ -873,8 +875,20 @@ const CardEntryRow = ({
   const t = useT();
   const card = entry.cardId ? getCard(entry.cardId) : undefined;
   const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restorePlacement, setRestorePlacement] = useState<'top' | 'bottom'>('bottom');
+  const restoreBtnRef = useRef<HTMLButtonElement>(null);
+  const [descOpen, setDescOpen] = useState(false);
 
   const theme = card ? CARD_THEME[card.type] : UNKNOWN_THEME;
+
+  const toggleRestoreMenu = () => {
+    if (!restoreOpen && restoreBtnRef.current) {
+      const rect = restoreBtnRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom - 80; // reserve room for MobileNav
+      setRestorePlacement(spaceBelow < 180 ? 'top' : 'bottom');
+    }
+    setRestoreOpen((o) => !o);
+  };
 
   return (
     <motion.li
@@ -903,6 +917,40 @@ const CardEntryRow = ({
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
+        {card && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setDescOpen((o) => !o)}
+              title={t(cardDescKey(card))}
+              aria-label={t(cardDescKey(card))}
+              aria-expanded={descOpen}
+              className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
+            >
+              <Info size={13} />
+            </button>
+            {descOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setDescOpen(false)}
+                  aria-hidden
+                />
+                <div
+                  role="tooltip"
+                  className="absolute right-0 top-full mt-1 z-20 w-56 p-2.5 rounded-md border border-atreides-gold/40 bg-atreides-night shadow-panel"
+                >
+                  <p className="text-[10px] uppercase font-display tracking-widest text-atreides-gold mb-1">
+                    {t(cardNameKey(card))}
+                  </p>
+                  <p className="text-[11px] text-atreides-silver leading-snug">
+                    {t(cardDescKey(card))}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
         {!entry.cardId && (
           <button
             onClick={onReveal}
@@ -924,27 +972,41 @@ const CardEntryRow = ({
         {isEliminated && onRestore && availableFactions && (
           <div className="relative">
             <button
-              onClick={() => setRestoreOpen((o) => !o)}
+              ref={restoreBtnRef}
+              onClick={toggleRestoreMenu}
               title={t('tracker.cardRow.restore')}
               className="p-1 text-atreides-silverMuted hover:text-atreides-gold"
             >
               <RotateCcw size={13} />
             </button>
             {restoreOpen && (
-              <div className="absolute right-0 top-full mt-1 z-10 bg-atreides-night border border-atreides-gold/40 rounded shadow-panel min-w-[140px]">
-                {availableFactions.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => {
-                      onRestore(f);
-                      setRestoreOpen(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-atreides-silver hover:bg-atreides-navy/40 text-left"
-                  >
-                    <FactionIcon faction={f} size={14} />
-                    {t(`faction.${f}.short`)}
-                  </button>
-                ))}
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setRestoreOpen(false)}
+                  aria-hidden
+                />
+              <div
+                className={cn(
+                  'absolute right-0 z-50 bg-atreides-night border border-atreides-gold/40 rounded shadow-panel min-w-[140px]',
+                  restorePlacement === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
+                )}
+              >
+                <div className="max-h-32 overflow-y-auto">
+                  {availableFactions.map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => {
+                        onRestore(f);
+                        setRestoreOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-atreides-silver hover:bg-atreides-navy/40 text-left"
+                    >
+                      <FactionIcon faction={f} size={14} />
+                      {t(`faction.${f}.short`)}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={() => setRestoreOpen(false)}
                   className="flex items-center gap-2 w-full px-2 py-1 text-[10px] text-atreides-silverMuted hover:text-atreides-gold border-t border-atreides-gold/10"
@@ -952,6 +1014,7 @@ const CardEntryRow = ({
                   <X size={10} /> {t('common.cancel')}
                 </button>
               </div>
+              </>
             )}
           </div>
         )}
