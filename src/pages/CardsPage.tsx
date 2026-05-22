@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -875,7 +876,9 @@ const CardEntryRow = ({
   const t = useT();
   const card = entry.cardId ? getCard(entry.cardId) : undefined;
   const [restoreOpen, setRestoreOpen] = useState(false);
-  const [restorePlacement, setRestorePlacement] = useState<'top' | 'bottom'>('bottom');
+  const [restoreCoords, setRestoreCoords] = useState<
+    { top: number; right: number; placement: 'top' | 'bottom' } | null
+  >(null);
   const restoreBtnRef = useRef<HTMLButtonElement>(null);
   const [descOpen, setDescOpen] = useState(false);
 
@@ -885,7 +888,12 @@ const CardEntryRow = ({
     if (!restoreOpen && restoreBtnRef.current) {
       const rect = restoreBtnRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom - 80; // reserve room for MobileNav
-      setRestorePlacement(spaceBelow < 180 ? 'top' : 'bottom');
+      const placement: 'top' | 'bottom' = spaceBelow < 180 ? 'top' : 'bottom';
+      setRestoreCoords({
+        top: placement === 'bottom' ? rect.bottom + 4 : rect.top - 4,
+        right: window.innerWidth - rect.right,
+        placement,
+      });
     }
     setRestoreOpen((o) => !o);
   };
@@ -900,6 +908,7 @@ const CardEntryRow = ({
         theme.bg,
         theme.border,
         isEliminated && 'opacity-60 saturate-50',
+        descOpen && 'relative z-50',
       )}
     >
       <CardMedallion card={card} size="sm" />
@@ -970,7 +979,7 @@ const CardEntryRow = ({
           </button>
         )}
         {isEliminated && onRestore && availableFactions && (
-          <div className="relative">
+          <>
             <button
               ref={restoreBtnRef}
               onClick={toggleRestoreMenu}
@@ -979,44 +988,48 @@ const CardEntryRow = ({
             >
               <RotateCcw size={13} />
             </button>
-            {restoreOpen && (
+            {restoreOpen && restoreCoords && createPortal(
               <>
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[60]"
                   onClick={() => setRestoreOpen(false)}
                   aria-hidden
                 />
-              <div
-                className={cn(
-                  'absolute right-0 z-50 bg-atreides-night border border-atreides-gold/40 rounded shadow-panel min-w-[140px]',
-                  restorePlacement === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
-                )}
-              >
-                <div className="max-h-32 overflow-y-auto">
-                  {availableFactions.map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => {
-                        onRestore(f);
-                        setRestoreOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-atreides-silver hover:bg-atreides-navy/40 text-left"
-                    >
-                      <FactionIcon faction={f} size={14} />
-                      {t(`faction.${f}.short`)}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setRestoreOpen(false)}
-                  className="flex items-center gap-2 w-full px-2 py-1 text-[10px] text-atreides-silverMuted hover:text-atreides-gold border-t border-atreides-gold/10"
+                <div
+                  className="fixed z-[70] bg-atreides-night border border-atreides-gold/40 rounded shadow-panel min-w-[140px]"
+                  style={{
+                    right: restoreCoords.right,
+                    ...(restoreCoords.placement === 'bottom'
+                      ? { top: restoreCoords.top }
+                      : { bottom: window.innerHeight - restoreCoords.top }),
+                  }}
                 >
-                  <X size={10} /> {t('common.cancel')}
-                </button>
-              </div>
-              </>
+                  <div className="max-h-32 overflow-y-auto">
+                    {availableFactions.map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => {
+                          onRestore(f);
+                          setRestoreOpen(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-xs text-atreides-silver hover:bg-atreides-navy/40 text-left"
+                      >
+                        <FactionIcon faction={f} size={14} />
+                        {t(`faction.${f}.short`)}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setRestoreOpen(false)}
+                    className="flex items-center gap-2 w-full px-2 py-1 text-[10px] text-atreides-silverMuted hover:text-atreides-gold border-t border-atreides-gold/10"
+                  >
+                    <X size={10} /> {t('common.cancel')}
+                  </button>
+                </div>
+              </>,
+              document.body,
             )}
-          </div>
+          </>
         )}
         <button
           onClick={onDelete}
