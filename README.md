@@ -1,73 +1,119 @@
-# Atreides Command — Dune Strategic Assistant
+# Dune Atreides — Treachery Card Tracker & Strategy Assistant for the Dune Board Game
 
-Assistant stratégique pour la faction Atreides dans le jeu de société **Dune** (Avalon Hill / Gale Force Nine). Application web pensée pour accompagner une partie réelle autour d'un plateau physique.
+> Open-source companion app for the classic **Dune board game** (Avalon Hill / Gale Force Nine / Avalon Hill Games). Track spice, leaders, Treachery cards, traitors and bidding rounds across a real-life game session. Designed for players of the Atreides faction, but useful for any house at the table.
 
-## Fonctionnalités
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-3-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-d4a437)](https://github.com/GhostSt94/dune-atreidis-notes/pulls)
 
-- **Dashboard de partie** avec phase tracker, tour, alertes, factions, IA.
-- **Gestion des 6 factions** : troupes, épice, leaders, alliances, notes privées, historique.
-- **Système de notes** catégorisées (traîtrise, leaders, plans ennemis, batailles, alliances, infos, mentat, économie) avec priorités et épinglage.
-- **Tracker de cartes de traîtrise** en trois colonnes (connues / suspectées / éliminées), exploitant l'avantage prescient Atreides.
-- **Tracker de batailles** avec formulaire complet (RHF + Zod) et historique.
-- **Prédictions Bene Gesserit** avec niveau de confiance et résolution.
-- **Carte stratégique SVG** d'Arrakis : contrôle, présence par faction, épice, conflits, brouillard de guerre.
-- **Journal de partie** timeline auto-générée.
-- **Moteur IA heuristique 100% local** : scoring de menace, estimation des mains, risques d'alliance, probabilités de victoire, suggestions Mentat.
-- **Sauvegarde locale + Export/Import JSON** versionné.
-- **Mode rapide mobile** (bottom nav).
-- **Dark mode unique** thème Atreides (bleu nuit, argent, or).
+---
 
-## Stack
+## What is this?
 
-| Couche | Choix |
+A lightweight, offline-first **Dune board game tracker** that runs entirely in your browser. No backend, no account, no cloud sync — your game state lives in `localStorage` and can be exported as JSON.
+
+Built specifically around the strategic needs of an Atreides player (prescient advantage, traitor knowledge, alliance reads), but usable for any of the six standard houses: **Atreides, Harkonnen, Emperor, Fremen, Spacing Guild, Bene Gesserit**.
+
+## Features
+
+- **Per-faction tracker** with spice meter, leaders (alive/fallen), Treachery cards in hand, and traitors.
+- **Treachery cards catalog** with 43+ cards — Weapons (projectile + poison), Defenses (Shield, Snooper), Specials (Karama, Family Atomics, Truthtrance, Thumper, Harvester, Stone Burner, Lasgun, Cone of Silence…) and Worthless cards. Themed playing-card UI with type-colored medallions and inline subtype labels.
+- **Bidding-phase recorder** (floating action button): pick a card, choose the winning faction and the price, and the app applies the cascade — winner spice debited, Emperor credited (or vanishes to the bank if the Emperor wins or is absent).
+- **Traitor tracker** per faction with leader catalog and Harkonnen always-active rule baked in.
+- **Eliminated-cards discard** with one-tap restore to any faction.
+- **Notes** with categories (Treachery, Leaders, Plans, Alliances…), priorities and pinning.
+- **Single-game mode**: keep one active game at a time, start a fresh one from Settings with a confirmation modal.
+- **Mobile-first** layout with a bottom navigation bar — works great on a phone at the table.
+- **Bilingual UI**: English and French (FR), switchable from Settings.
+- **Export / Import JSON** versioned backups.
+- **Local-only** — no telemetry, no tracking, no server.
+
+## Tech stack
+
+| Layer | Choice |
 |---|---|
-| Build | Vite 5 + React 18 + TypeScript 5 (strict) |
-| Styling | TailwindCSS 3 + CSS variables |
-| State | Zustand 4 + middleware `persist` (LocalStorage) |
-| Routing | React Router 6 |
-| Animations | Framer Motion 11 |
-| Forms | React Hook Form + Zod |
-| Icons | Lucide React |
-| Tests | Vitest + React Testing Library |
+| Build | **Vite 5** + **React 18** + **TypeScript 5** (strict mode) |
+| Styling | **TailwindCSS 3** with custom Atreides theme (deep blue, silver, gold) |
+| State | **Zustand 4** + `persist` middleware (localStorage) |
+| Routing | **React Router 6** |
+| Animations | **Framer Motion 11** |
+| Forms | **React Hook Form** + **Zod** |
+| Icons | **lucide-react** |
+| Tests | **Vitest** + **React Testing Library** |
 
-## Démarrage
+## Quick start
 
-```powershell
+```bash
+git clone https://github.com/GhostSt94/dune-atreidis-notes.git
+cd dune-atreidis-notes
 npm install
-npm run dev          # http://localhost:5173
-npm run typecheck
-npm run lint
-npm run test
-npm run build
+npm run dev               # http://localhost:5173
 ```
 
-## Architecture
+Useful scripts:
+
+```bash
+npm run dev               # Vite dev server (HMR)
+npm run dev -- --host     # Expose on LAN — open from your phone
+npm run build             # tsc --noEmit + vite build
+npm run typecheck         # TypeScript only
+npm run lint              # ESLint
+npm run test              # Vitest unit tests
+```
+
+## Deployment
+
+The app is a static SPA — deploy the `dist/` folder anywhere. A `vercel.json` is included with the SPA rewrite (`/(.*)` → `/index.html`) so React Router routes resolve on hard reload.
+
+**One-click deploy**: Vercel, Netlify, Cloudflare Pages, GitHub Pages — all work out of the box.
+
+## Project structure
 
 ```
 src/
-├── ai/             # Moteur d'analyse heuristique
 ├── components/
-│   ├── layout/     # AppShell, Sidebar, Topbar, MobileNav
-│   ├── ui/         # Primitives stylées (Button, Card, Modal, Tabs, etc.)
-│   └── widgets/    # Panneaux du dashboard (PhaseTracker, AIInsights, …)
-├── data/           # Catalogues statiques (factions, leaders, territoires, cartes, phases)
-├── hooks/          # useAnalysis, useAlerts, useAutosave, useMediaQuery, …
-├── lib/            # storage, id, date, exportImport, cn
-├── pages/          # Login, GamesList, NewGame, GameView, Factions, Notes, Cards,
-│                   #  Battles, Map, Journal, Analysis, Predictions, History, Settings
-├── store/          # Stores Zustand persistés par domaine
-├── styles/         # index.css + theme.ts
-└── types/          # Types TypeScript (faction, game, note, card, battle, …)
+│   ├── layout/      # AppShell, MobileNav (bottom nav for mobile-first)
+│   ├── ui/          # Button, Card, Modal, Toggle, Input, Badge, EmptyState…
+│   └── icons/       # FactionIcon and Atreides/Harkonnen/Emperor/Fremen/Guild/Bene Gesserit assets
+├── data/
+│   ├── cards.ts     # 43+ Treachery cards (weapons, defenses, specials, worthless)
+│   ├── factions.ts  # The 6 standard houses with colors, starting spice, mottos
+│   ├── leaders.ts   # Named leaders with portraits and values
+│   └── phases.ts    # Game phase sequence
+├── pages/
+│   ├── CardsPage.tsx     # Tracker — the main view
+│   ├── NotesPage.tsx     # Note-taking
+│   ├── SettingsPage.tsx  # Profile, language, new game, backup
+│   └── NewGamePage.tsx   # Faction selection on game start
+├── store/           # Zustand stores (game, cards, notes, factions, traitors, profile, settings)
+├── i18n/            # English + French translations
+└── styles/          # Tailwind layer extensions and theme tokens
 ```
 
-## Roadmap v2 (différée)
+## About the Dune board game
 
-- Backend Node/Express + MongoDB + WebSocket (sync multijoueur).
-- Authentification réelle (JWT).
-- Intégration LLM Claude API pour analyses en langage naturel.
-- PWA installable et offline manifest.
-- i18n EN/FR.
+The **Dune board game** is a classic 1979 strategy game by Eon, republished by Avalon Hill (Gale Force Nine) in 2019. Each of the 2–6 players takes the role of a **Great House** competing for control of the planet **Arrakis** and its precious **spice melange**.
 
-## License
+This tracker is a fan-made tool — it does not replace the rulebook, the physical board, the dice or the cards. It is a **digital notepad** to keep score of spice, leaders alive and fallen, Treachery cards in each opponent's hand, suspected traitors and ongoing alliances.
 
-Usage privé. Dune est une marque déposée de Herbert Properties LLC et de ses ayants droit. Ce projet est un outil non officiel à des fins ludiques.
+### Keywords / search terms
+
+> Dune board game tracker · Dune Avalon Hill companion app · Dune Gale Force Nine helper · Treachery card tracker · Atreides strategy assistant · Dune board game helper · spice tracker · faction tracker · Dune board game tools · Dune 2019 reprint · open source board game companion
+
+## Bilingual / Multilingue
+
+The UI is available in **English** and **French** (switch from Settings). All Treachery cards, leaders, factions and tooltips are translated.
+
+L'interface est disponible en **anglais** et en **français** (changement dans les Paramètres). Toutes les cartes de Traîtrise, les leaders, les factions et les info-bulles sont traduites.
+
+## Contributing
+
+Issues and pull requests welcome. The codebase aims for strict TypeScript, zero ESLint warnings and a clean Vite build. Run `npm run typecheck && npm run build` before opening a PR.
+
+## License & disclaimer
+
+This is an **unofficial fan project** for personal and recreational use only. **Dune** is a trademark of **Herbert Properties LLC** and its licensees. The board game is published by **Avalon Hill / Gale Force Nine / Wizards of the Coast**. This app is not affiliated with, endorsed by, or sponsored by any of those entities.
+
+No card art, board art or copyrighted text from the published game is included in this repository.
