@@ -9,6 +9,7 @@ export { useMapStore } from './mapStore';
 export { useJournalStore } from './journalStore';
 export { useSettingsStore } from './settingsStore';
 export { useTraitorsStore, MAX_TRAITORS_PER_FACTION } from './traitorsStore';
+export { useUndoStore, withUndo } from './undoStore';
 
 import { useGameStore } from './gameStore';
 import { useFactionStore } from './factionStore';
@@ -20,6 +21,7 @@ import { useMapStore } from './mapStore';
 import { useJournalStore } from './journalStore';
 import { useTraitorsStore } from './traitorsStore';
 import { useSettingsStore } from './settingsStore';
+import { useUndoStore } from './undoStore';
 import type { FactionId } from '@/types/faction';
 
 export const cascadeDeleteGame = (gameId: string): void => {
@@ -32,6 +34,7 @@ export const cascadeDeleteGame = (gameId: string): void => {
   useMapStore.getState().removeGame(gameId);
   useJournalStore.getState().clearForGame(gameId);
   useTraitorsStore.getState().clearForGame(gameId);
+  useUndoStore.getState().clear();
 };
 
 export const bootstrapGame = (gameId: string, factions: FactionId[]): void => {

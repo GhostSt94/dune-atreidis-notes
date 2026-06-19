@@ -25,6 +25,7 @@ import {
   Asterisk,
   Gavel,
   Info,
+  Undo2,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -33,6 +34,8 @@ import {
   useTraitorsStore,
   useFactionStore,
   useSettingsStore,
+  useUndoStore,
+  withUndo,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
 import { TREACHERY_CARDS, getCard, cardNameKey, cardDescKey, cardSubtitleKey } from '@/data/cards';
@@ -168,6 +171,8 @@ export const CardsPage = () => {
   const [addingTraitorFor, setAddingTraitorFor] = useState<FactionId | null>(null);
   const [selectedFactions, setSelectedFactions] = useState<Set<FactionId>>(new Set());
   const [biddingOpen, setBiddingOpen] = useState(false);
+  const undoPast = useUndoStore((s) => s.past);
+  const undo = useUndoStore((s) => s.undo);
   const hiddenSectionsArr = useSettingsStore((s) => s.hiddenTrackerSections);
   const toggleTrackerSection = useSettingsStore((s) => s.toggleTrackerSection);
   const hiddenSections = useMemo(() => new Set(hiddenSectionsArr), [hiddenSectionsArr]);
@@ -236,6 +241,7 @@ export const CardsPage = () => {
   );
 
   const addUnknown = (target: AddTarget) => {
+    useUndoStore.getState().push('tracker.undo.action.addCard');
     if ('eliminated' in target) {
       addEntry({
         gameId: game.id,
@@ -257,6 +263,7 @@ export const CardsPage = () => {
   };
 
   const addKnown = (target: AddTarget, cardId: string) => {
+    useUndoStore.getState().push('tracker.undo.action.addCard');
     if ('eliminated' in target) {
       addEntry({
         gameId: game.id,
@@ -278,21 +285,25 @@ export const CardsPage = () => {
   };
 
   const eliminate = (entry: CardTrackerEntry) => {
+    useUndoStore.getState().push('tracker.undo.action.eliminateCard');
     updateEntry(entry.id, { knowledge: 'eliminated', heldBy: undefined });
   };
 
   const restore = (entry: CardTrackerEntry, factionId: FactionId) => {
+    useUndoStore.getState().push('tracker.undo.action.restoreCard');
     updateEntry(entry.id, { knowledge: 'known', heldBy: factionId });
   };
 
   const revealCard = (cardId: string) => {
     if (!revealEntry) return;
+    useUndoStore.getState().push('tracker.undo.action.revealCard');
     updateEntry(revealEntry.id, { cardId });
     setRevealEntry(null);
   };
 
   const pickLeaderForTraitor = (leaderFactionId: FactionId, leaderName: string) => {
     if (!traitorPickTarget) return;
+    useUndoStore.getState().push('tracker.undo.action.assignTraitor');
     assignTraitorLeader(traitorPickTarget.id, leaderFactionId, leaderName);
     setTraitorPickTarget(null);
   };
@@ -302,12 +313,14 @@ export const CardsPage = () => {
     leaderFactionId: FactionId,
     leaderName: string,
   ) => {
+    useUndoStore.getState().push('tracker.undo.action.addTraitor');
     const created = addTraitorSlot(game.id, factionId);
     if (created) assignTraitorLeader(created.id, leaderFactionId, leaderName);
     setAddingTraitorFor(null);
   };
 
   const addTraitorUnknown = (factionId: FactionId) => {
+    useUndoStore.getState().push('tracker.undo.action.addTraitor');
     addTraitorSlot(game.id, factionId);
     setAddingTraitorFor(null);
   };
@@ -321,6 +334,7 @@ export const CardsPage = () => {
     winner: FactionId;
     price: number;
   }) => {
+    useUndoStore.getState().push('tracker.undo.action.bid');
     addEntry({
       gameId: game.id,
       cardId,
@@ -461,11 +475,13 @@ export const CardsPage = () => {
           const spice = factionState?.estimatedSpice ?? meta.startingSpice;
 
           const adjustSpice = (delta: number) => {
+            useUndoStore.getState().push('tracker.undo.action.spiceAdjust');
             updateFaction(game.id, id, {
               estimatedSpice: Math.max(0, spice + delta),
             });
           };
           const setSpice = (value: number) => {
+            useUndoStore.getState().push('tracker.undo.action.spiceReset');
             updateFaction(game.id, id, {
               estimatedSpice: Math.max(0, Number.isFinite(value) ? value : 0),
             });
@@ -554,8 +570,12 @@ export const CardsPage = () => {
                         alive={l.alive}
                         onToggle={() =>
                           l.alive
-                            ? killLeader(game.id, id, l.id)
-                            : reviveLeader(game.id, id, l.id)
+                            ? withUndo('tracker.undo.action.killLeader', () =>
+                                killLeader(game.id, id, l.id),
+                              )
+                            : withUndo('tracker.undo.action.reviveLeader', () =>
+                                reviveLeader(game.id, id, l.id),
+                              )
                         }
                       />
                     ))}
@@ -579,7 +599,9 @@ export const CardsPage = () => {
                       index={idx}
                       onReveal={() => setRevealEntry(e)}
                       onEliminate={() => eliminate(e)}
-                      onDelete={() => removeEntry(e.id)}
+                      onDelete={() =>
+                        withUndo('tracker.undo.action.deleteCard', () => removeEntry(e.id))
+                      }
                     />
                   ))}
                 </ul>
@@ -607,9 +629,21 @@ export const CardsPage = () => {
                         key={tr.id}
                         traitor={tr}
                         onAssign={() => setTraitorPickTarget(tr)}
-                        onClearLeader={() => clearTraitorLeader(tr.id)}
-                        onToggleActive={() => toggleTraitorActive(tr.id)}
-                        onRemove={() => removeTraitorSlot(tr.id)}
+                        onClearLeader={() =>
+                          withUndo('tracker.undo.action.clearTraitor', () =>
+                            clearTraitorLeader(tr.id),
+                          )
+                        }
+                        onToggleActive={() =>
+                          withUndo('tracker.undo.action.toggleTraitor', () =>
+                            toggleTraitorActive(tr.id),
+                          )
+                        }
+                        onRemove={() =>
+                          withUndo('tracker.undo.action.removeTraitor', () =>
+                            removeTraitorSlot(tr.id),
+                          )
+                        }
                       />
                     ))}
                   </ul>
@@ -653,7 +687,9 @@ export const CardsPage = () => {
                 isEliminated
                 onReveal={() => setRevealEntry(e)}
                 onRestore={(factionId) => restore(e, factionId)}
-                onDelete={() => removeEntry(e.id)}
+                onDelete={() =>
+                  withUndo('tracker.undo.action.deleteCard', () => removeEntry(e.id))
+                }
                 availableFactions={game.factionsInPlay}
               />
             ))}
@@ -760,6 +796,22 @@ export const CardsPage = () => {
         className="fixed bottom-24 right-4 z-20 w-14 h-14 rounded-full bg-gradient-to-br from-atreides-gold via-atreides-goldSoft to-atreides-gold/80 text-atreides-deep shadow-goldGlow ring-2 ring-atreides-gold/60 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
       >
         <Gavel size={22} />
+      </button>
+
+      {/* Floating undo button — symmetric to bidding on the left */}
+      <button
+        onClick={() => undo()}
+        disabled={undoPast.length === 0}
+        title={t('tracker.undo.tooltip', { count: undoPast.length })}
+        aria-label={t('tracker.undo.aria')}
+        className="fixed bottom-24 left-4 z-20 w-12 h-12 rounded-full bg-atreides-deep border-2 border-atreides-gold/60 text-atreides-gold shadow-panel ring-1 ring-atreides-gold/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+      >
+        <Undo2 size={18} />
+        {undoPast.length > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-atreides-gold text-atreides-deep text-[10px] font-mono font-bold flex items-center justify-center">
+            {undoPast.length}
+          </span>
+        )}
       </button>
     </div>
   );

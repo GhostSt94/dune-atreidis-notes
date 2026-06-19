@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { bootstrapGame, useCurrentGame, useGameStore } from '@/store';
+import { bootstrapGame, useCurrentGame, useGameStore, useUndoStore } from '@/store';
 import { FACTIONS, FACTION_IDS, factionTextColor } from '@/data/factions';
 import type { FactionId } from '@/types/faction';
 import { Card } from '@/components/ui/Card';
@@ -32,6 +32,7 @@ export const NewGamePage = () => {
     if (factions.size < 2) return;
     const factionsArr = Array.from(factions);
     const name = t('newGame.autoName', { date: new Date().toISOString().slice(0, 10) });
+    useUndoStore.getState().clear();
     const id = createGame({
       name,
       playerCount: factionsArr.length,
