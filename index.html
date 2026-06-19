@@ -1,24 +1,116 @@
 <!doctype html>
-<html lang="fr" class="dark">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#050a14" />
+
+    <!-- Search engine verification -->
+    <meta name="google-site-verification" content="TM3-vB0UhvIe9Dfq8DJQGRVnXeQX6V-G976OYPa3o4M" />
+
+    <!-- Primary SEO -->
+    <title>Dune Board Game Tracker — Treachery Cards, Spice & Leaders Companion App</title>
+    <meta
+      name="description"
+      content="Free open-source companion app for the Dune board game (Avalon Hill / Gale Force Nine). Track Treachery cards, spice, leaders, traitors and bidding rounds in real time. Works offline, mobile-first, no account required."
+    />
+    <meta
+      name="keywords"
+      content="dune board game, dune tracker, treachery cards, avalon hill dune, gale force nine, dune companion app, atreides, harkonnen, emperor, fremen, spacing guild, bene gesserit, spice tracker, board game helper, dune 2019"
+    />
+    <meta name="author" content="GhostSt94" />
+    <link rel="canonical" href="https://dune-atreidis-notes.vercel.app/" />
+
+    <!-- Icons & PWA -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord, Slack, iMessage...) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dune-atreidis-notes.vercel.app/" />
+    <meta property="og:title" content="Dune Board Game Tracker — Treachery Cards & Spice Companion" />
+    <meta
+      property="og:description"
+      content="Track Treachery cards, spice, leaders and bidding in the Dune board game. Free, offline-first, mobile-friendly. Open-source."
+    />
+    <meta property="og:image" content="https://dune-atreidis-notes.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dune Board Game Tracker — Atreides faction screen" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:site_name" content="Dune Atreides Tracker" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dune Board Game Tracker — Treachery Cards & Spice Companion" />
+    <meta
+      name="twitter:description"
+      content="Free open-source companion app for the Dune board game. Track Treachery cards, spice, leaders, bidding."
+    />
+    <meta name="twitter:image" content="https://dune-atreidis-notes.vercel.app/og-image.png" />
+
+    <!-- Structured data — SoftwareApplication referencing the Dune board game -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Dune Board Game Tracker",
+        "alternateName": "Atreides Command",
+        "description": "Free open-source companion app for the Dune board game (Avalon Hill / Gale Force Nine). Track Treachery cards, spice, leaders, traitors and bidding rounds.",
+        "applicationCategory": "GameApplication",
+        "applicationSubCategory": "Board game companion",
+        "operatingSystem": "Web, iOS, Android",
+        "browserRequirements": "Requires a modern browser with JavaScript and localStorage",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "url": "https://dune-atreidis-notes.vercel.app/",
+        "softwareVersion": "0.1.0",
+        "inLanguage": ["en", "fr"],
+        "isAccessibleForFree": true,
+        "author": {
+          "@type": "Person",
+          "name": "GhostSt94",
+          "url": "https://github.com/GhostSt94"
+        },
+        "about": {
+          "@type": "Game",
+          "name": "Dune",
+          "alternateName": ["Dune board game", "Dune 1979", "Dune 2019 reprint"],
+          "publisher": "Avalon Hill / Gale Force Nine",
+          "numberOfPlayers": "2-6",
+          "playMode": "MultiPlayer"
+        }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Cinzel:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <title>Atreides Command — Dune Strategic Assistant</title>
-    <meta
-      name="description"
-      content="Assistant stratégique pour la faction Atreides dans le jeu de société Dune."
-    />
   </head>
   <body class="bg-atreides-deep text-atreides-silver font-sans antialiased">
     <div id="root"></div>
+    <noscript>
+      <div style="padding:2rem;color:#c0c8d6;font-family:system-ui">
+        <h1>Dune Board Game Tracker</h1>
+        <p>
+          This is a free, open-source web app to track Treachery cards, spice, leaders and bidding
+          rounds in the Dune board game (Avalon Hill / Gale Force Nine). JavaScript is required —
+          please enable it to use the tracker.
+        </p>
+        <p>
+          Source code:
+          <a href="https://github.com/GhostSt94/dune-atreidis-notes">github.com/GhostSt94/dune-atreidis-notes</a>
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

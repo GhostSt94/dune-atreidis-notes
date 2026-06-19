@@ -1,0 +1,20 @@
+{
+  "name": "Dune Board Game Tracker",
+  "short_name": "Dune Tracker",
+  "description": "Free open-source companion app for the Dune board game (Avalon Hill / Gale Force Nine). Track Treachery cards, spice, leaders, traitors and bidding rounds.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050a14",
+  "theme_color": "#050a14",
+  "lang": "en",
+  "categories": ["games", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
