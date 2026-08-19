@@ -247,7 +247,7 @@
   "settings.rules": "Game rules",
   "settings.rules.subtitle": "Applies to new games",
   "settings.includeValue10": "Include value-10 leaders",
-  "settings.includeValue10.desc": "Enables Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes and Edric in the leader and traitor pool. Disabled by default (standard game).",
+  "settings.includeValue10.desc": "Enables Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes and Edric in the leader and traitor pool, plus the extra treachery cards (Slip Tip, Shigawire, Semuta Drug, Kriminon, Stone Burner, Thumper, Harvester, Cone of Silence, extra copies…). Disabled by default (standard game).",
   "settings.backup": "Backup",
   "settings.export": "Export all",
   "settings.import": "Import a file",

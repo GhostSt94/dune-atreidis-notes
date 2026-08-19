@@ -14,6 +14,8 @@ export interface TreacheryCard {
   counteredBy?: string;
   /** Approximate combat-impact heuristic, 0..1. */
   battleImpact: number;
+  /** Only in the deck when the value-10 leaders advanced rule is enabled. */
+  expansion?: boolean;
 }
 
 export interface CardTrackerEntry {

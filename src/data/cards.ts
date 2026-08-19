@@ -6,7 +6,10 @@ interface CardSeed {
   subtype?: WeaponSubtype;
   counteredBy?: string;
   battleImpact: number;
+  /** Copies in the base game deck. */
   quantity: number;
+  /** Extra copies only in play with the value-10 leaders advanced rule. */
+  expansionQuantity?: number;
 }
 
 const SEEDS: CardSeed[] = [
@@ -15,25 +18,25 @@ const SEEDS: CardSeed[] = [
   { slug: 'lasgun', type: 'weapon', battleImpact: 0.98, quantity: 1 },
   { slug: 'maula_pistol', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.61, quantity: 1 },
   { slug: 'hunter_seeker', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.73, quantity: 1 },
-  { slug: 'slip_tip', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.58, quantity: 1 },
+  { slug: 'slip_tip', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.58, quantity: 0, expansionQuantity: 1 },
   { slug: 'stunner', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.55, quantity: 1 },
   { slug: 'crysknife', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.75, quantity: 1 },
-  { slug: 'shigawire', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.69, quantity: 1 },
+  { slug: 'shigawire', type: 'weapon', subtype: 'projectile', counteredBy: 'shield', battleImpact: 0.69, quantity: 0, expansionQuantity: 1 },
 
   // Poison weapons (countered by Snooper)
   { slug: 'gom_jabbar', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.88, quantity: 1 },
   { slug: 'chaumas', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.74, quantity: 1 },
   { slug: 'chaumurky', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.66, quantity: 1 },
-  { slug: 'ellaca_drug', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.62, quantity: 2 },
-  { slug: 'semuta_drug', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.59, quantity: 1 },
-  { slug: 'kriminon', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.71, quantity: 1 },
+  { slug: 'ellaca_drug', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.62, quantity: 1, expansionQuantity: 1 },
+  { slug: 'semuta_drug', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.59, quantity: 0, expansionQuantity: 1 },
+  { slug: 'kriminon', type: 'weapon', subtype: 'poison', counteredBy: 'snooper', battleImpact: 0.71, quantity: 0, expansionQuantity: 1 },
 
   // Special weapon — ignores defenses (kills both sides regardless of shield/snooper)
-  { slug: 'stone_burner', type: 'weapon', battleImpact: 1.0, quantity: 1 },
+  { slug: 'stone_burner', type: 'weapon', battleImpact: 1.0, quantity: 0, expansionQuantity: 1 },
 
   // Defenses
-  { slug: 'shield', type: 'defense', battleImpact: 0.82, quantity: 5 },
-  { slug: 'snooper', type: 'defense', battleImpact: 0.81, quantity: 5 },
+  { slug: 'shield', type: 'defense', battleImpact: 0.82, quantity: 4, expansionQuantity: 1 },
+  { slug: 'snooper', type: 'defense', battleImpact: 0.81, quantity: 4, expansionQuantity: 1 },
 
   // Specials
   { slug: 'karama', type: 'special', battleImpact: 0.95, quantity: 2 },
@@ -41,12 +44,12 @@ const SEEDS: CardSeed[] = [
   { slug: 'family_atomics', type: 'special', battleImpact: 0.97, quantity: 1 },
   { slug: 'weather_control', type: 'special', battleImpact: 0.57, quantity: 1 },
   { slug: 'tleilaxu_ghola', type: 'special', battleImpact: 0.79, quantity: 1 },
-  { slug: 'truthtrance', type: 'special', battleImpact: 0.72, quantity: 3 },
-  { slug: 'thumper', type: 'special', battleImpact: 0.4, quantity: 1 },
-  { slug: 'harvester', type: 'special', battleImpact: 0.21, quantity: 1 },
-  { slug: 'cone_of_silence', type: 'special', battleImpact: 0.3, quantity: 1 },
+  { slug: 'truthtrance', type: 'special', battleImpact: 0.72, quantity: 2, expansionQuantity: 1 },
+  { slug: 'thumper', type: 'special', battleImpact: 0.4, quantity: 0, expansionQuantity: 1 },
+  { slug: 'harvester', type: 'special', battleImpact: 0.21, quantity: 0, expansionQuantity: 1 },
+  { slug: 'cone_of_silence', type: 'special', battleImpact: 0.3, quantity: 0, expansionQuantity: 1 },
   { slug: 'cheap_hero', type: 'special', battleImpact: 0.33, quantity: 2 },
-  { slug: 'cheap_heroine', type: 'special', battleImpact: 0.31, quantity: 2 },
+  { slug: 'cheap_heroine', type: 'special', battleImpact: 0.31, quantity: 1, expansionQuantity: 1 },
 
   // Worthless
   { slug: 'baliset', type: 'worthless', battleImpact: 0.01, quantity: 1 },
@@ -54,40 +57,36 @@ const SEEDS: CardSeed[] = [
   { slug: 'kulon', type: 'worthless', battleImpact: 0.01, quantity: 1 },
   { slug: 'la_la_la', type: 'worthless', battleImpact: 0.01, quantity: 1 },
   { slug: 'trip_to_gamont', type: 'worthless', battleImpact: 0.01, quantity: 1 },
-  { slug: 'ya_ya_yawm', type: 'worthless', battleImpact: 0.01, quantity: 1 },
-  { slug: 'distrans', type: 'worthless', battleImpact: 0.01, quantity: 1 },
-  { slug: 'dune_encyclopedia', type: 'worthless', battleImpact: 0.01, quantity: 1 },
+  { slug: 'ya_ya_yawm', type: 'worthless', battleImpact: 0.01, quantity: 0, expansionQuantity: 1 },
+  { slug: 'distrans', type: 'worthless', battleImpact: 0.01, quantity: 0, expansionQuantity: 1 },
+  { slug: 'dune_encyclopedia', type: 'worthless', battleImpact: 0.01, quantity: 0, expansionQuantity: 1 },
 ];
 
 const expand = (seeds: CardSeed[]): TreacheryCard[] => {
   const out: TreacheryCard[] = [];
   for (const s of seeds) {
-    if (s.quantity === 1) {
+    const total = s.quantity + (s.expansionQuantity ?? 0);
+    for (let i = 1; i <= total; i++) {
       out.push({
-        id: s.slug,
+        id: total === 1 ? s.slug : `${s.slug}_${i}`,
         slug: s.slug,
         type: s.type,
         subtype: s.subtype,
         counteredBy: s.counteredBy,
         battleImpact: s.battleImpact,
+        // Copies beyond the base quantity only exist with the value-10 rule.
+        expansion: i > s.quantity || undefined,
       });
-    } else {
-      for (let i = 1; i <= s.quantity; i++) {
-        out.push({
-          id: `${s.slug}_${i}`,
-          slug: s.slug,
-          type: s.type,
-          subtype: s.subtype,
-          counteredBy: s.counteredBy,
-          battleImpact: s.battleImpact,
-        });
-      }
     }
   }
   return out;
 };
 
 export const TREACHERY_CARDS: TreacheryCard[] = expand(SEEDS);
+
+/** Deck as available under the current rules (base game, or with value-10 leaders extras). */
+export const availableCards = (includeValue10: boolean): TreacheryCard[] =>
+  includeValue10 ? TREACHERY_CARDS : TREACHERY_CARDS.filter((c) => !c.expansion);
 
 export const getCard = (id: string): TreacheryCard | undefined =>
   TREACHERY_CARDS.find((c) => c.id === id);

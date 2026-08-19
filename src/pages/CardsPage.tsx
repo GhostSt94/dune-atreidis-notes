@@ -39,7 +39,7 @@ import {
   withUndo,
   MAX_TRAITORS_PER_FACTION,
 } from '@/store';
-import { TREACHERY_CARDS, getCard, cardNameKey, cardDescKey, cardSubtitleKey } from '@/data/cards';
+import { availableCards, getCard, cardNameKey, cardDescKey, cardSubtitleKey } from '@/data/cards';
 import { FACTIONS, FACTION_IDS, factionTextColor } from '@/data/factions';
 import { LEADER_SEED, findLeaderSeed } from '@/data/leaders';
 import type { CardType, TreacheryCard, CardTrackerEntry } from '@/types/card';
@@ -175,6 +175,7 @@ export const CardsPage = () => {
   const [biddingOpen, setBiddingOpen] = useState(false);
   const undoPast = useUndoStore((s) => s.past);
   const undo = useUndoStore((s) => s.undo);
+  const includeValue10 = useSettingsStore((s) => s.useValue10Leaders);
   const hiddenSectionsArr = useSettingsStore((s) => s.hiddenTrackerSections);
   const toggleTrackerSection = useSettingsStore((s) => s.toggleTrackerSection);
   const hiddenSections = useMemo(() => new Set(hiddenSectionsArr), [hiddenSectionsArr]);
@@ -219,9 +220,9 @@ export const CardsPage = () => {
       special: [],
       worthless: [],
     };
-    TREACHERY_CARDS.forEach((c) => groups[c.type].push(c));
+    availableCards(includeValue10).forEach((c) => groups[c.type].push(c));
     return groups;
-  }, []);
+  }, [includeValue10]);
 
   // Cartes déjà placées dans le tracker (toutes factions + éliminées)
   const usedCardIds = useMemo(
@@ -243,24 +244,16 @@ export const CardsPage = () => {
   );
 
   const addUnknown = (target: AddTarget) => {
+    // Une carte éliminée est toujours identifiée : pas de carte inconnue ici.
+    if ('eliminated' in target) return;
     useUndoStore.getState().push('tracker.undo.action.addCard');
-    if ('eliminated' in target) {
-      addEntry({
-        gameId: game.id,
-        cardId: undefined,
-        knowledge: 'eliminated',
-        heldBy: undefined,
-        notedAtTurn: game.currentTurn,
-      });
-    } else {
-      addEntry({
-        gameId: game.id,
-        cardId: undefined,
-        knowledge: 'known',
-        heldBy: target.factionId,
-        notedAtTurn: game.currentTurn,
-      });
-    }
+    addEntry({
+      gameId: game.id,
+      cardId: undefined,
+      knowledge: 'known',
+      heldBy: target.factionId,
+      notedAtTurn: game.currentTurn,
+    });
     setAddTarget(null);
   };
 
@@ -288,6 +281,11 @@ export const CardsPage = () => {
 
   const eliminate = (entry: CardTrackerEntry) => {
     useUndoStore.getState().push('tracker.undo.action.eliminateCard');
+    // Une carte inconnue n'apporte aucune info une fois défaussée : on la retire simplement.
+    if (!entry.cardId) {
+      removeEntry(entry.id);
+      return;
+    }
     updateEntry(entry.id, { knowledge: 'eliminated', heldBy: undefined });
   };
 
@@ -1384,7 +1382,7 @@ const AddCardModal = ({
         groupedCards={groupedCards}
         search={search}
         onSelect={(cardId) => onAddKnown(cardId)}
-        onSelectUnknown={onAddUnknown}
+        onSelectUnknown={'eliminated' in target ? undefined : onAddUnknown}
         usedCardIds={usedCardIds}
       />
     </Modal>

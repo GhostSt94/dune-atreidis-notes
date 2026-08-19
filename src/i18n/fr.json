@@ -247,7 +247,7 @@
   "settings.rules": "Règles du jeu",
   "settings.rules.subtitle": "S'applique aux nouvelles parties",
   "settings.includeValue10": "Inclure les leaders valeur 10",
-  "settings.includeValue10.desc": "Active Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes et Edric dans le pool de leaders + traîtres. Désactivé par défaut (jeu standard).",
+  "settings.includeValue10.desc": "Active Paul Muad'Dib, Baron Harkonnen, Shaddam IV, Mohiam, Liet Kynes et Edric dans le pool de leaders + traîtres, ainsi que les cartes de traîtrise supplémentaires (Slip Tip, Shigawire, Semuta, Kriminon, Stone Burner, Thumper, Harvester, Cone of Silence, copies en plus…). Désactivé par défaut (jeu standard).",
   "settings.backup": "Sauvegarde",
   "settings.export": "Exporter tout",
   "settings.import": "Importer un fichier",
