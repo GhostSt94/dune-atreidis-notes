@@ -41,4 +41,22 @@ export const bootstrapGame = (gameId: string, factions: FactionId[]): void => {
   const includeValue10 = useSettingsStore.getState().useValue10Leaders;
   useFactionStore.getState().initForGame(gameId, factions, includeValue10);
   useMapStore.getState().initForGame(gameId);
+  seedStartingCards(gameId, factions);
+};
+
+// Mise en place : chaque faction pioche 1 carte de traîtrise, Harkonnen en pioche 2.
+const seedStartingCards = (gameId: string, factions: FactionId[]): void => {
+  const { addEntry } = useCardsStore.getState();
+  for (const factionId of factions) {
+    const count = factionId === 'harkonnen' ? 2 : 1;
+    for (let i = 0; i < count; i++) {
+      addEntry({
+        gameId,
+        cardId: undefined,
+        knowledge: 'known',
+        heldBy: factionId,
+        notedAtTurn: 1,
+      });
+    }
+  }
 };
