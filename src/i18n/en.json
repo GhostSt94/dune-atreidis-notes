@@ -88,6 +88,8 @@
   "tracker.emptyDiscard.title": "Empty pile",
   "tracker.emptyDiscard.desc": "Used and discarded cards will appear here.",
   "tracker.addEliminatedCard": "Add an eliminated card",
+  "tracker.deckReshuffled": "Deck reshuffled",
+  "tracker.undo.action.deckReshuffled": "Deck reshuffled",
   "tracker.resetSpice": "Reset to {value}",
   "tracker.spiceLabel": "Spice",
 

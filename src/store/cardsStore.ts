@@ -9,6 +9,7 @@ interface CardsStore {
   addEntry: (entry: Omit<CardTrackerEntry, 'id' | 'createdAt' | 'updatedAt'>) => CardTrackerEntry;
   updateEntry: (id: string, patch: Partial<CardTrackerEntry>) => void;
   removeEntry: (id: string) => void;
+  clearEliminatedForGame: (gameId: string) => void;
   clearForGame: (gameId: string) => void;
   entriesForGame: (gameId: string) => CardTrackerEntry[];
 }
@@ -39,6 +40,14 @@ export const useCardsStore = create<CardsStore>()(
 
       removeEntry: (id) => {
         set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }));
+      },
+
+      clearEliminatedForGame: (gameId) => {
+        set((s) => ({
+          entries: s.entries.filter(
+            (e) => !(e.gameId === gameId && e.knowledge === 'eliminated'),
+          ),
+        }));
       },
 
       clearForGame: (gameId) => {

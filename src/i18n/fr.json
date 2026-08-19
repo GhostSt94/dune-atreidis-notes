@@ -88,6 +88,8 @@
   "tracker.emptyDiscard.title": "Pile vide",
   "tracker.emptyDiscard.desc": "Les cartes utilisées et défaussées apparaîtront ici.",
   "tracker.addEliminatedCard": "Ajouter une carte éliminée",
+  "tracker.deckReshuffled": "Paquet remélangé",
+  "tracker.undo.action.deckReshuffled": "Paquet remélangé",
   "tracker.resetSpice": "Reset à {value}",
   "tracker.spiceLabel": "Épice",
 

@@ -26,6 +26,7 @@ import {
   Gavel,
   Info,
   Undo2,
+  Shuffle,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -154,6 +155,7 @@ export const CardsPage = () => {
   const addEntry = useCardsStore((s) => s.addEntry);
   const updateEntry = useCardsStore((s) => s.updateEntry);
   const removeEntry = useCardsStore((s) => s.removeEntry);
+  const clearEliminatedForGame = useCardsStore((s) => s.clearEliminatedForGame);
   const traitors = useTraitorsStore((s) => s.traitors);
   const addTraitorSlot = useTraitorsStore((s) => s.addSlot);
   const assignTraitorLeader = useTraitorsStore((s) => s.assignLeader);
@@ -695,15 +697,32 @@ export const CardsPage = () => {
             ))}
           </ul>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          leftIcon={<Plus size={12} />}
-          onClick={() => setAddTarget({ eliminated: true })}
-          className="w-full mt-3 border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
-        >
-          {t('tracker.addEliminatedCard')}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            leftIcon={<Plus size={12} />}
+            onClick={() => setAddTarget({ eliminated: true })}
+            className="flex-1 border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
+          >
+            {t('tracker.addEliminatedCard')}
+          </Button>
+          {eliminated.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<Shuffle size={12} />}
+              onClick={() =>
+                withUndo('tracker.undo.action.deckReshuffled', () =>
+                  clearEliminatedForGame(game.id),
+                )
+              }
+              className="flex-1 border border-dashed border-atreides-gold/30 hover:border-atreides-gold/60"
+            >
+              {t('tracker.deckReshuffled')}
+            </Button>
+          )}
+        </div>
       </UICard>
 
       {/* Modal d'ajout de carte */}
