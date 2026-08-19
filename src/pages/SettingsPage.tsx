@@ -34,7 +34,6 @@ export const SettingsPage = () => {
   const language = useSettingsStore((s) => s.language);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const profile = useProfileStore((s) => s.profile);
-  const clearProfile = useProfileStore((s) => s.clearProfile);
 
   const games = useGameStore((s) => s.games);
   const factionsByGame = useFactionStore((s) => s.byGame);
@@ -149,13 +148,6 @@ export const SettingsPage = () => {
               {t('settings.profile.local')}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => clearProfile()}
-          >
-            {t('settings.profile.change')}
-          </Button>
         </div>
       </Card>
 
